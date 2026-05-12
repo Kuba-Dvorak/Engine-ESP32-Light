@@ -9,15 +9,27 @@
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_lcd_panel_ops.h"     // Základní operace s obrazovkou
-#include "esp_lcd_panel_rgb.h"     // Specifické pro RGB/VGA (LCD_CAM periferie)
-#include "driver/gpio.h"           // Nastavení pinů
-#include "esp_heap_caps.h"        // Správa paměti (pro PSRAM)
-#include "esp_log.h"
-#include "driver/gpio.h"
-#include "driver/ledc.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_rgb.h"
+#include "driver/gpio.h"
+#include "esp_heap_caps.h"
+#include "Arduino.h"
+#include "driver/periph_ctrl.h"
+#include "soc/lcd_cam_struct.h"
+#include "soc/lcd_cam_reg.h"
+#include "driver/gpio.h"      // gpio_matrix_out
+#include "rom/lldesc.h"       // lldesc_t
+#include "esp_heap_caps.h"    // heap_caps_malloc pro DMA paměť
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
+#include "esp_private/gdma.h"
+#include "esp_private/esp_clk.h"
+#include "soc/rtc.h"
+#include "soc/esp32s3/rtc.h"
+#include "soc/rtc_cntl_reg.h"
+#include "regi2c_ctrl.h"
+#include "esp32s3/rom/cache.h"
+
 
 //fully operational 3D raycasting engine
 
@@ -106,17 +118,17 @@ public:
 
 struct SimpleColor {
     int red, blue, green;
-    static constexpr  float koeficient = (1.0f / 64);
+    static constexpr float koeficient = (1.0f / 64);
     SimpleColor(int red = 0, int green = 0, int blue = 0) {
         this->red = red;
         this->blue = blue;
         this->green = green;
     }
     uint8_t convertToBinary() {
-        uint8_t finalColor = 0b00000000;
-        finalColor |= int((red * koeficient)) << 4;
+        uint8_t finalColor = 0b11000000;
+        finalColor |= int((red * koeficient));
         finalColor |= int((green * koeficient)) << 2;
-        finalColor |= int((blue * koeficient));
+        finalColor |= int((blue * koeficient)) << 4;
         return finalColor;
     }
 };
@@ -577,7 +589,7 @@ public:
         this->reactToLight = reactToLight;
     }
 
-    void drawOutPolygonSDL2SuperFast(uint16_t* zBufferImp, uint8_t* colorsBuffer, screenAndCameraInfo const &cameraInfo, bool outLine, int outlineThickness) {
+    void drawOutPolygonSDL2SuperFast(uint8_t* zBufferImp, uint8_t* colorsBuffer, screenAndCameraInfo const &cameraInfo, bool outLine, int outlineThickness) {
         if (localxMajority) {
             bool leftRight = false;
             int minX = 0;
@@ -623,7 +635,7 @@ public:
                 }
 
                 for (int xPos = minX; xPos < maxX+1; xPos += 1) {
-                    uint16_t globalZ = uint16_t(1.0f / (definingGradiantablePoints[0].myPos.z + (xPos - definingGradiantablePoints[0].myPos.x) * localGradiant[0] + (yPos - definingGradiantablePoints[0].myPos.y) * localGradiant[1]));
+                    uint8_t globalZ = uint8_t(1.0f / (definingGradiantablePoints[0].myPos.z + (xPos - definingGradiantablePoints[0].myPos.x) * localGradiant[0] + (yPos - definingGradiantablePoints[0].myPos.y) * localGradiant[1]));
 
                     if (blockification) {
                         for (int yPosReal = yPos; yPosReal < yPos + localBlockification; yPosReal += 1) {
@@ -708,7 +720,7 @@ public:
                 }
 
                 for (int yPos = minY; yPos < maxY+1; yPos += 1) {
-                    uint16_t globalZ = uint16_t(1.0f / (definingGradiantablePoints[0].myPos.z + (xPos - definingGradiantablePoints[0].myPos.x) * localGradiant[0] + (yPos - definingGradiantablePoints[0].myPos.y) * localGradiant[1]));
+                    uint8_t globalZ = uint8_t(1.0f / (definingGradiantablePoints[0].myPos.z + (xPos - definingGradiantablePoints[0].myPos.x) * localGradiant[0] + (yPos - definingGradiantablePoints[0].myPos.y) * localGradiant[1]));
 
                     if (blockification) {
                         for (int xPosReal = xPos; xPosReal < xPos + localBlockification; xPosReal += 1) {
@@ -1050,7 +1062,7 @@ simple3D_Pos_float locilazePoint(Position3D_float &playerPos, Position3D_float &
 
 
 bool boundBoxCol(Position3D_float &playerPos, Position3D_float &centrePoint, std::array<Vector3D_float, 3> &unitVectorsCentre, simple3D_Pos_float &playerSize, simple3D_Pos_float &blockSize) {
-    std::array<Position3D_float, 9> points = {
+    Position3D_float points[9] = {
         Position3D_float(playerPos.changedBy(simple3D_Pos_float(playerSize.x, playerSize.y, playerSize.z))),
         Position3D_float(playerPos.changedBy(simple3D_Pos_float(-playerSize.x, playerSize.y, playerSize.z))),
         Position3D_float(playerPos.changedBy(simple3D_Pos_float(playerSize.x, -playerSize.y, playerSize.z))),
@@ -1327,7 +1339,7 @@ public:
         retypePolygonsThis(playInfo, allPolygons, allLights);
     }
 
-    void drawOutFastSDL2(playerFullInfo &myInfo, uint8_t* colorsBuffer, uint16_t *zBuffer, std::vector<GlobalPolygon_float> &globalPolygons) {
+    void drawOutFastSDL2(playerFullInfo &myInfo, uint8_t* colorsBuffer, uint8_t *zBuffer, std::vector<GlobalPolygon_float> &globalPolygons) {
         int indexNum = firstPolygonNum;
 
         for (int i = 0; i < 36; i += 3) {
@@ -1498,7 +1510,7 @@ public:
         this->myBasicInfo = playerFullInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
     }
 
-    void camera(uint8_t* sdlBuffer, uint16_t* zBuffer, basicInfo &globalInfo) {
+    void camera(uint8_t* sdlBuffer, uint8_t* zBuffer, basicInfo &globalInfo) {
         linearColisionSetup();
         for (Cube3D_float &oneObject : globalInfo.objectList) {
             if (oneObject.visibility) {
@@ -1672,46 +1684,6 @@ public:
 };
 
 
-esp_lcd_panel_handle_t screenSetup(std::array<int, 6> pinsRGB, std::array<int, 2> pinsSync, int monitorWidth = 320, int monitorHeight = 200, int pixelClock = 9000000) {
-    esp_lcd_panel_handle_t panel_handlerer = NULL;
-
-    esp_lcd_rgb_panel_config_t settings = {
-        .clk_src = LCD_CLK_SRC_APLL,
-        .timings = {
-            .pclk_hz = (uint32_t)pixelClock,
-            .h_res = (uint32_t)monitorWidth,
-            .v_res = (uint32_t)monitorHeight,
-            .hsync_pulse_width = 30,
-            .hsync_back_porch = 20,
-            .hsync_front_porch = 10,
-            .vsync_pulse_width = 3,
-            .vsync_back_porch = 12,
-            .vsync_front_porch = 8,
-            .flags = {
-                .hsync_idle_low = false,
-                .vsync_idle_low = false,
-            },
-        },
-        .data_width = 16,
-        .sram_trans_align = 64,
-        .psram_trans_align = 64,
-        .hsync_gpio_num = pinsSync[1],
-        .vsync_gpio_num = pinsSync[0],
-        .pclk_gpio_num = 15,
-        .data_gpio_nums = {pinsRGB[0], pinsRGB[1], pinsRGB[2], pinsRGB[3], pinsRGB[4], pinsRGB[5], -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
-        .disp_gpio_num = -1,
-        .flags = {
-            .fb_in_psram = false,
-        }
-    };
-
-    esp_lcd_new_rgb_panel(&settings, &panel_handlerer);
-    esp_lcd_panel_reset(panel_handlerer);
-    esp_lcd_panel_init(panel_handlerer);
-    return panel_handlerer;
-}
-
-
 void setIO(std::vector<gpio_num_t> outputIO, std::vector<gpio_num_t> inputy) {
     gpio_config_t output_conf = {};
     output_conf.intr_type = GPIO_INTR_DISABLE;
@@ -1734,73 +1706,332 @@ void setIO(std::vector<gpio_num_t> outputIO, std::vector<gpio_num_t> inputy) {
 }
 
 
+struct VGATimings {
+    int screenWidth, screenHeight;
+    int HFront, HBack, Hsync;
+    int VFront, VBack, Vsync;
+    int pxClock;
+    bool hsyncPos, vsyncPos;
+    uint8_t bitHsync, bitVsync;
+    float VsyncFreq, HsyncFreq;
+    int totalHeights, totalWidths;
+    int precalcTotalHsync, precalcSum;
+
+    int heightTotal() {
+        return screenHeight + VBack + VFront + Vsync;
+    }
+
+    int widthTotal() {
+        return screenWidth + HBack + HFront + Hsync;
+    }
+
+    //code: (vsync, hsync, r1, r2, g1, g2, b1, b2)
+    void setupPins(std::array<int, 8> &pins) {
+        for (int i = 0; i < 8; i += 1) {
+            gpio_pad_select_gpio(pins[i]);
+            gpio_set_direction((gpio_num_t)pins[i], GPIO_MODE_OUTPUT);
+            gpio_matrix_out(pins[i], LCD_DATA_OUT0_IDX + i, false,false);
+        }
+    }
+
+    void prepareLCDMod() {
+        periph_module_enable(PERIPH_LCD_CAM_MODULE);
+        periph_module_reset(PERIPH_LCD_CAM_MODULE);
+        LCD_CAM.lcd_user.lcd_reset = 1;
+        LCD_CAM.lcd_user.lcd_reset = 0;
+        LCD_CAM.lcd_clock.val = 0;
+        LCD_CAM.lcd_clock.clk_en = 1;
+        LCD_CAM.lcd_clock.lcd_clk_sel = 2;      // Zdroj 160 MHz (PLL_D2_CLK)
+        LCD_CAM.lcd_clock.lcd_clkm_div_num = 6;  // Celá část děličky
+        LCD_CAM.lcd_clock.lcd_clkm_div_b = 2;    // Čitatel (0.4 = 2/5)
+        LCD_CAM.lcd_clock.lcd_clkm_div_a = 5;    // Jmenovatel
+        LCD_CAM.lcd_clock.lcd_ck_out_edge = 0;
+        LCD_CAM.lcd_clock.lcd_ck_idle_edge = 0;
+        LCD_CAM.lcd_clock.lcd_clk_equ_sysclk = 0;
+        LCD_CAM.lcd_clock.lcd_clkcnt_n = 0;
+        LCD_CAM.lcd_clock.lcd_ck_idle_edge = 0;
+        LCD_CAM.lcd_clock.lcd_ck_out_edge = 0;
+        LCD_CAM.lcd_ctrl.val = 0;
+        LCD_CAM.lcd_ctrl.lcd_rgb_mode_en = 0;
+        LCD_CAM.lcd_ctrl2.val = 0;
+        LCD_CAM.lcd_ctrl2.lcd_hsync_width = Hsync;
+        LCD_CAM.lcd_ctrl2.lcd_vsync_width = Vsync;
+        LCD_CAM.lcd_ctrl2.lcd_hsync_idle_pol = hsyncPos;
+        LCD_CAM.lcd_ctrl2.lcd_vsync_idle_pol = vsyncPos;
+        LCD_CAM.lcd_ctrl2.lcd_hs_blank_en = 0;
+        LCD_CAM.lcd_user.val = 0;
+        LCD_CAM.lcd_user.lcd_2byte_en = 0;
+        LCD_CAM.lcd_user.lcd_bit_order = 0;
+        LCD_CAM.lcd_user.lcd_byte_order = 0;
+        LCD_CAM.lcd_user.lcd_8bits_order = 1;
+        LCD_CAM.lcd_user.lcd_always_out_en = 1;
+        LCD_CAM.lcd_user.lcd_dout = 1;
+        LCD_CAM.lcd_user.lcd_dout_cyclelen = 0;
+    }
+
+    VGATimings() {
+        this->screenHeight = 480;
+        this->screenWidth = 640;
+        this->Hsync = 96;
+        this->HFront = 16;
+        this->HBack = 48;
+        this->Vsync = 2;
+        this->VBack = 33;
+        this->VFront = 10;
+        this->pxClock = 25000000;
+        this->hsyncPos = true;
+        this->vsyncPos = true;
+        this->bitHsync = (1 << 6);
+        this->bitVsync = (1 << 7);
+        this->HsyncFreq = ((float)pxClock / widthTotal());
+        this->VsyncFreq = (HsyncFreq / heightTotal());
+        this->totalHeights = heightTotal();
+        this->totalWidths = widthTotal();
+        this->precalcTotalHsync = 800 - 96;
+        this->precalcSum = 96 + 640 + 48;
+    }
+};
+
+
 class gameInfo {
 private:
-    uint16_t* zBuffer;
+    uint8_t* zBuffer;
     uint8_t* frontBuffer;
     uint8_t* backBuffer;
-    esp_lcd_panel_handle_t handelerer;
+    uint8_t* linesBuffer[2];
+    VGATimings myVGA;
     pressedKeys myKeys;
+    gdma_channel_handle_t dma_chan;
+    std::array<int, 8> pins;
+    uint8_t fillerHsync = 0b10000111;
+    uint8_t fillerZero = 0b11000111;
+    uint8_t vSyncfillerHsync = 0b00000111;
+    uint8_t vSyncfillerZero = 0b01000111;
+
+    void setupGDMA_Chan() {
+        periph_module_reset(PERIPH_GDMA_MODULE);
+        gdma_channel_alloc_config_t out_alloc_config = {
+            .sibling_chan = NULL,
+            .direction = GDMA_CHANNEL_DIRECTION_TX,
+            .flags = {.reserve_sibling = 0}
+        };
+
+        gdma_new_channel(&out_alloc_config, &dma_chan);
+        gdma_disconnect(dma_chan);
+        gdma_connect(dma_chan, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_LCD, 0));
+        gdma_start(dma_chan, (intptr_t)&dmaDesc[0]);
+        gdma_transfer_ability_t ability = {
+            .sram_trans_align = 4,
+            .psram_trans_align = 0
+        };
+        gdma_set_transfer_ability(dma_chan, &ability);
+        gdma_tx_event_callbacks_t myCallbacks = {
+            .on_trans_eof = interuptGDMA_callback
+        };
+        gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
+    }
+
+    Player_float createBasicPlayer(int fov = 90, float senstivity = 0.001, float speed = 0.2, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
+    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
+        return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
+    }
 
 public:
 
-    uint16_t renderDistance;
+    uint8_t renderDistance;
     basicInfo gameGlobals;
     int height, width;
     uint8_t backgroundColor;
     bool blockify;
     float lodLevel;
+    SemaphoreHandle_t mySemaphore;
+    volatile int virLineCount = 0;
+    int activeBuffer = 0;
+    int activeStart;
+    int activeEnd;
+    lldesc_t* dmaDesc;
+    Player_float myPlayer;
 
-    gameInfo(int windowWidth = 320, int windowHeight = 200, int pixelClock = 9000000, std::array<int, 6> RGBpins = {4, 5, 6, 7, 17, 18}, std::array<int, 2> SYNCPins = {40, 39},
-        uint16_t renderDistance = 800, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = true, float lodLevel = 0.5) {
+    void IRAM_ATTR prepareBlankRow(uint8_t* bufferFill, bool vgaFill = false) {
+        if (vgaFill) {
+            memset(bufferFill, 0b00000111, myVGA.Hsync);
+            memset(bufferFill + myVGA.Hsync, 0b01000111, myVGA.precalcTotalHsync);
+        }
+        else {
+            memset(bufferFill, 0b10000111, myVGA.Hsync);
+            memset(bufferFill + myVGA.Hsync, 0b11000111, myVGA.precalcTotalHsync);
+        }
+    }
+
+
+    gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 48, 21, 17, 18},
+        uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = true, float lodLevel = 0.5) {
         this->width = windowWidth;
         this->height = windowHeight;
-        this->frontBuffer = (uint8_t *)heap_caps_malloc(windowWidth * windowHeight * 1, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-        this->backBuffer = (uint8_t *)heap_caps_malloc(windowWidth * windowHeight * 1, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        this->myVGA = VGATimings();
+        this->virLineCount = 0;
+        this->pins = pins;
+        this->mySemaphore = xSemaphoreCreateBinary();
 
-        if (frontBuffer == NULL || backBuffer == NULL) {
-            std::cout << "!!!!! Bufferes haven't been inicialized !!!!!!!" << std::endl;
+        if (mySemaphore == NULL) {
+            std::cout << "!!!!! Semaphore hasn`t been inicialized !!!!!!!" << std::endl;
+            Serial.printf("!!!!! Semaphore hasn`t been inicialized !!!!!!!");
         }
-        std::fill(frontBuffer, frontBuffer + height * width, backgroundColor.convertToBinary());
-        std::fill(backBuffer, backBuffer + height * width, backgroundColor.convertToBinary());
 
-        this->zBuffer = (uint16_t*)malloc(windowHeight * windowWidth * sizeof(uint16_t));
-        std::fill(zBuffer, zBuffer + windowWidth * windowHeight, renderDistance);
+        this->frontBuffer = (uint8_t *)heap_caps_malloc(windowWidth * windowHeight * sizeof(uint8_t), MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+        this->backBuffer = (uint8_t *)heap_caps_malloc(windowWidth * windowHeight * sizeof(uint8_t), MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+        this->linesBuffer[0] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        this->linesBuffer[1] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        this->zBuffer = (uint8_t*)heap_caps_malloc(windowHeight * windowWidth * sizeof(uint8_t), MALLOC_CAP_INTERNAL);
+
+        if (frontBuffer == NULL || zBuffer == NULL || linesBuffer[1] == NULL || linesBuffer[0] == NULL) {
+            std::cout << "!!!!! Buffers haven't been inicialized !!!!!!!" << std::endl;
+            Serial.printf("!!!!! Buffers haven't been inicialized !!!!!!!");
+            return;
+        }
+
+        memset(frontBuffer, backgroundColor.convertToBinary(), height * width);
+        memset(backBuffer, backgroundColor.convertToBinary(), height * width);
+        memset(zBuffer, renderDistance, height * width);
+
+        dmaDesc = (lldesc_t*)heap_caps_malloc(2 * sizeof(lldesc_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+
+        for (int i = 0; i < 2; i += 1) {
+            dmaDesc[i].size = myVGA.totalWidths;
+            dmaDesc[i].length = myVGA.totalWidths;
+            dmaDesc[i].owner = 1;
+            dmaDesc[i].sosf = 0;
+            dmaDesc[i].offset = 0;
+            dmaDesc[i].eof = 1;
+            dmaDesc[i].buf = linesBuffer[i];
+            dmaDesc[i].qe.stqe_next = &dmaDesc[(i + 1) % 2];
+        }
+
+        Cache_WriteBack_Addr((uint32_t)dmaDesc, 2 * sizeof(lldesc_t));
+
         this->renderDistance = renderDistance;
         this->backgroundColor = backgroundColor.convertToBinary();
         this->lodLevel = lodLevel;
         this->blockify = blockify;
-        this->handelerer = screenSetup(RGBpins, SYNCPins, windowWidth, windowHeight, pixelClock);
+        this->activeStart = myVGA.VBack + myVGA.Vsync;
+        this->activeEnd = activeStart + myVGA.screenHeight;
+        this->myPlayer = createBasicPlayer();
     }
 
-    void setupKeys() {
 
+    void IRAM_ATTR expandLines(uint8_t* bufferFill, int yPos) {
+        int currentRow = yPos * width;
+        memset(bufferFill, 0b10000111, myVGA.Hsync);
+        memset(bufferFill + myVGA.Hsync, 0b00000111, myVGA.HBack);
+
+        int j = myVGA.Hsync + myVGA.HBack;
+        for (int i = 0; i < width; i += 1) {
+            bufferFill[j++] = frontBuffer[currentRow + i] | 0b11000000;
+            bufferFill[j++] = frontBuffer[currentRow + i] | 0b11000000;
+        }
+        memset(bufferFill + myVGA.precalcSum, 0b11000111, myVGA.HFront);
+    }
+
+    void IRAM_ATTR prepareBlank(uint8_t* bufferFill, int virLineCount) {
+        if (virLineCount < myVGA.Vsync) {
+            prepareBlankRow(bufferFill, true);
+        }
+        else {
+            prepareBlankRow(bufferFill);
+        }
+    }
+
+    void IRAM_ATTR interuptFunq() {
+        uint8_t* bufferFill = linesBuffer[activeBuffer];
+        if (virLineCount >= myVGA.totalHeights) {
+            virLineCount = 0;
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+            xSemaphoreGiveFromISR(mySemaphore, &xHigherPriorityTaskWoken);
+            if (xHigherPriorityTaskWoken) {
+                portYIELD_FROM_ISR();
+            }
+        }
+
+        if (virLineCount < activeEnd && virLineCount >= activeStart) {
+            int yPos = (virLineCount - activeStart) / 2;
+            expandLines(bufferFill, yPos);
+        }
+        else {
+            prepareBlank(bufferFill, virLineCount);
+        }
+        //Cache_WriteBack_Addr((uint32_t)bufferFill, myVGA.totalWidths);
+        activeBuffer ^= 1;
+        virLineCount += 1;
+    }
+
+    static IRAM_ATTR bool interuptGDMA_callback(gdma_channel_handle_t dma_chanHandlerer, gdma_event_data_t *eventData, void *userData) {
+        gameInfo* instance = (gameInfo*)userData;
+        instance->interuptFunq();
+        return true;
+    }
+
+    void vgaSetup() {
+        setCpuFrequencyMhz(240);
+        myVGA.prepareLCDMod();
+        myVGA.setupPins(pins);
+        setupGDMA_Chan();
+        LCD_CAM.lc_dma_int_ena.lcd_trans_done_int_ena = 0;
+
+        LCD_CAM.lcd_user.lcd_2byte_en = 0;
+        LCD_CAM.lcd_user.lcd_cmd_2_cycle_en = 0;
+
+        LCD_CAM.lcd_user.lcd_update = 1;
+        LCD_CAM.lcd_user.lcd_start = 1;
+    }
+
+    void drawScene(Player_float &player) {
+        memset(backBuffer, backgroundColor, height * width);
+        memset(zBuffer, renderDistance, height * width);
+
+        player.camera(backBuffer, zBuffer, gameGlobals);
     }
 
     void playerMove(Player_float &player_float) {
 
     }
 
-    void drawScene(Player_float &player) {
-        std::fill(backBuffer, backBuffer + height * width, backgroundColor);
-        std::fill(zBuffer, zBuffer + height * width, renderDistance);
-
-        player.camera(frontBuffer, zBuffer, gameGlobals);
-
-        esp_lcd_panel_draw_bitmap(handelerer, 0, 0, width, height, backBuffer);
-
-        uint8_t *tempBuffer = frontBuffer;
-        frontBuffer = backBuffer;
-        backBuffer = tempBuffer;
+    void swapBuffers() {
+        uint8_t* tempBuffer = backBuffer;
+        backBuffer = frontBuffer;
+        frontBuffer = tempBuffer;
     }
 
     ~gameInfo() {
-        std::free(zBuffer);
-        std::free(frontBuffer);
-        std::free(backBuffer);
+        heap_caps_free(zBuffer);
+        heap_caps_free(frontBuffer);
     }
 };
 
+
+static void core0Task(void* parameters) {
+    vTaskDelay(500);
+    gameInfo* instance = (gameInfo*)parameters;
+    vTaskDelay(500);
+    instance->vgaSetup();
+    while (true) {
+        vTaskDelay(10);
+    }
+}
+
+
+static void core1Task(void* parameters) {
+    vTaskDelay(500);
+    gameInfo* instance = (gameInfo*)parameters;
+    vTaskDelay(500);
+    Player_float player = instance->myPlayer;
+    vTaskDelay(500);
+    while (true) {
+        instance->drawScene(player);
+        xSemaphoreTake(instance->mySemaphore, portMAX_DELAY);
+        instance->swapBuffers();
+        vTaskDelay(10);
+    }
+}
 
 void createBasicCube(gameInfo &scene, Player_float &player, simple3D_Pos_float position = simple3D_Pos_float(0,0,0), simple3D_Pos_float size = simple3D_Pos_float(1,1,1), SimpleColor color = SimpleColor(0,0,0),
     SimpleColor outlineColor = SimpleColor(0,0,0), bool outline = false, float outlineSize = 10, bool colisions = false, bool visibility = true, bool reactToLight = false) {
@@ -1854,26 +2085,28 @@ simple3D_Pos_float playerGetPos(Player_float &player) {
 }
 
 
-Player_float createBasicPlayer(gameInfo &scene, int fov = 90, float senstivity = 0.001, float speed = 0.2, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
-    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
-    return Player_float(speed, scene.height, scene.width, fov, beginPos, scene.blockify, scene.lodLevel, colisionBox, gravity, gravityMode, senstivity);
-}
-
 gameInfo* game = nullptr;
 Player_float* myPlayer = nullptr;
 
 
 void setup() {
-    game = new gameInfo(320, 200, 8000000);
-    myPlayer = new Player_float(createBasicPlayer(*game));
+    Serial.begin(115200);
+    delay(2000);
 
-    createBasicCube(*game, *myPlayer);
+    game = new gameInfo(320, 240);
+
+    xTaskCreatePinnedToCore(
+        core0Task,
+        "vgaIntrupter", 4096*2, game, 24, nullptr, 0
+    );
+
+    xTaskCreatePinnedToCore(
+        core1Task,
+        "renderer", 4096*4, game, 24, nullptr, 1
+    );
 }
 
 
 void loop() {
-    if (game && myPlayer) {
-        game->drawScene(*myPlayer);
-    }
-    vTaskDelay(1); // Důležité pro stabilitu ESP32
+    vTaskDelay(1);
 }
