@@ -1754,11 +1754,11 @@ struct VGATimings {
         LCD_CAM.lcd_ctrl.val = 0;
         LCD_CAM.lcd_ctrl.lcd_rgb_mode_en = 0;
         LCD_CAM.lcd_ctrl2.val = 0;
+        LCD_CAM.lcd_ctrl2.lcd_hs_blank_en = 0;
         LCD_CAM.lcd_ctrl2.lcd_hsync_width = Hsync;
         LCD_CAM.lcd_ctrl2.lcd_vsync_width = Vsync;
         LCD_CAM.lcd_ctrl2.lcd_hsync_idle_pol = hsyncPos;
         LCD_CAM.lcd_ctrl2.lcd_vsync_idle_pol = vsyncPos;
-        LCD_CAM.lcd_ctrl2.lcd_hs_blank_en = 0;
         LCD_CAM.lcd_user.val = 0;
         LCD_CAM.lcd_user.lcd_2byte_en = 0;
         LCD_CAM.lcd_user.lcd_bit_order = 0;
@@ -1798,7 +1798,7 @@ private:
     uint8_t* zBuffer;
     uint8_t* frontBuffer;
     uint8_t* backBuffer;
-    uint8_t* linesBuffer[2];
+    uint8_t* linesBuffer[4];
     VGATimings myVGA;
     pressedKeys myKeys;
     gdma_channel_handle_t dma_chan;
@@ -1807,6 +1807,19 @@ private:
     uint8_t fillerZero = 0b11000111;
     uint8_t vSyncfillerHsync = 0b00000111;
     uint8_t vSyncfillerZero = 0b01000111;
+    bool doubled;
+
+    void prepareBlankLines() {
+        for (int i = 0; i < 2; i += 1) {
+            memset(linesBuffer[i], 0b11000000, myVGA.totalWidths);
+            memset(linesBuffer[i], 0b10000000, myVGA.Hsync);
+        }
+        memset(linesBuffer[2], 0b01000000, myVGA.totalWidths);
+        memset(linesBuffer[2], 0b00000000, myVGA.Hsync);
+
+        memset(linesBuffer[3], 0b11000000, myVGA.totalWidths);
+        memset(linesBuffer[3], 0b10000000, myVGA.Hsync);
+    }
 
     void setupGDMA_Chan() {
         periph_module_reset(PERIPH_GDMA_MODULE);
@@ -1849,28 +1862,18 @@ public:
     int activeBuffer = 0;
     int activeStart;
     int activeEnd;
+    pressedKeys currentKeys;
     lldesc_t* dmaDesc;
     Player_float myPlayer;
 
-    void IRAM_ATTR prepareBlankRow(uint8_t* bufferFill, bool vgaFill = false) {
-        if (vgaFill) {
-            memset(bufferFill, 0b00000111, myVGA.Hsync);
-            memset(bufferFill + myVGA.Hsync, 0b01000111, myVGA.precalcTotalHsync);
-        }
-        else {
-            memset(bufferFill, 0b10000111, myVGA.Hsync);
-            memset(bufferFill + myVGA.Hsync, 0b11000111, myVGA.precalcTotalHsync);
-        }
-    }
-
-
-    gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 48, 21, 17, 18},
+    gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18},
         uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = true, float lodLevel = 0.5) {
         this->width = windowWidth;
         this->height = windowHeight;
         this->myVGA = VGATimings();
         this->virLineCount = 0;
         this->pins = pins;
+        this->currentKeys = pressedKeys();
         this->mySemaphore = xSemaphoreCreateBinary();
 
         if (mySemaphore == NULL) {
@@ -1882,17 +1885,21 @@ public:
         this->backBuffer = (uint8_t *)heap_caps_malloc(windowWidth * windowHeight * sizeof(uint8_t), MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
         this->linesBuffer[0] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
         this->linesBuffer[1] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        this->linesBuffer[2] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        this->linesBuffer[3] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
         this->zBuffer = (uint8_t*)heap_caps_malloc(windowHeight * windowWidth * sizeof(uint8_t), MALLOC_CAP_INTERNAL);
+        this->backgroundColor = backgroundColor.convertToBinary();
 
-        if (frontBuffer == NULL || zBuffer == NULL || linesBuffer[1] == NULL || linesBuffer[0] == NULL) {
+        if (frontBuffer == NULL || zBuffer == NULL || linesBuffer[1] == NULL || linesBuffer[0] == NULL || linesBuffer[2] == NULL || linesBuffer[3] == NULL) {
             std::cout << "!!!!! Buffers haven't been inicialized !!!!!!!" << std::endl;
             Serial.printf("!!!!! Buffers haven't been inicialized !!!!!!!");
             return;
         }
 
-        memset(frontBuffer, backgroundColor.convertToBinary(), height * width);
-        memset(backBuffer, backgroundColor.convertToBinary(), height * width);
+        memset(frontBuffer, this->backgroundColor, height * width);
+        memset(backBuffer, this->backgroundColor, height * width);
         memset(zBuffer, renderDistance, height * width);
+        prepareBlankLines();
 
         dmaDesc = (lldesc_t*)heap_caps_malloc(2 * sizeof(lldesc_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
@@ -1910,39 +1917,34 @@ public:
         Cache_WriteBack_Addr((uint32_t)dmaDesc, 2 * sizeof(lldesc_t));
 
         this->renderDistance = renderDistance;
-        this->backgroundColor = backgroundColor.convertToBinary();
         this->lodLevel = lodLevel;
         this->blockify = blockify;
         this->activeStart = myVGA.VBack + myVGA.Vsync;
         this->activeEnd = activeStart + myVGA.screenHeight;
         this->myPlayer = createBasicPlayer();
+        this->doubled = false;
     }
 
 
     void IRAM_ATTR expandLines(uint8_t* bufferFill, int yPos) {
-        int currentRow = yPos * width;
-        memset(bufferFill, 0b10000111, myVGA.Hsync);
-        memset(bufferFill + myVGA.Hsync, 0b00000111, myVGA.HBack);
-
         int j = myVGA.Hsync + myVGA.HBack;
-        for (int i = 0; i < width; i += 1) {
-            bufferFill[j++] = frontBuffer[currentRow + i] | 0b11000000;
-            bufferFill[j++] = frontBuffer[currentRow + i] | 0b11000000;
-        }
-        memset(bufferFill + myVGA.precalcSum, 0b11000111, myVGA.HFront);
-    }
-
-    void IRAM_ATTR prepareBlank(uint8_t* bufferFill, int virLineCount) {
-        if (virLineCount < myVGA.Vsync) {
-            prepareBlankRow(bufferFill, true);
-        }
-        else {
-            prepareBlankRow(bufferFill);
+        uint8_t* pixelSource = &frontBuffer[yPos * width];
+        uint32_t* fast32Bit = (uint32_t *)&bufferFill[j];
+        //frontBuffer[currentRow + i] | 0b11000000
+        //bufferFill[j++] = 0b11000100;
+        //bufferFill[j++] = 0b11000100;
+        for (int i = 0; i < width; i += 2) {
+            //uint8_t pixel = frontBuffer[currentRow + i];
+            uint8_t pixel1 = pixelSource[i];
+            uint8_t pixel2 = pixelSource[i + 1];
+            uint32_t doubelingNum = pixel2 << 24 | pixel2 << 16 | pixel1 << 8 | pixel1;
+            fast32Bit[0] = doubelingNum | 0b11000000110000001100000011000000;
+            fast32Bit += 1;
         }
     }
 
     void IRAM_ATTR interuptFunq() {
-        uint8_t* bufferFill = linesBuffer[activeBuffer];
+        virLineCount += 1;
         if (virLineCount >= myVGA.totalHeights) {
             virLineCount = 0;
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -1952,16 +1954,23 @@ public:
             }
         }
 
-        if (virLineCount < activeEnd && virLineCount >= activeStart) {
-            int yPos = (virLineCount - activeStart) / 2;
+        if (virLineCount <= myVGA.Vsync) {
+            dmaDesc[activeBuffer].buf = linesBuffer[2];
+        }
+
+        else if (virLineCount < activeEnd && virLineCount >= activeStart) {
+            uint8_t* bufferFill = linesBuffer[activeBuffer];
+            int yPos = (virLineCount - activeStart) >> 1;
+            dmaDesc[activeBuffer].buf = linesBuffer[activeBuffer];
             expandLines(bufferFill, yPos);
+            Cache_WriteBack_Addr((uint32_t)bufferFill, myVGA.totalWidths);
         }
+
         else {
-            prepareBlank(bufferFill, virLineCount);
+            dmaDesc[activeBuffer].buf = linesBuffer[3];
         }
-        //Cache_WriteBack_Addr((uint32_t)bufferFill, myVGA.totalWidths);
+        Cache_WriteBack_Addr((uint32_t)dmaDesc, 2 * sizeof(lldesc_t));
         activeBuffer ^= 1;
-        virLineCount += 1;
     }
 
     static IRAM_ATTR bool interuptGDMA_callback(gdma_channel_handle_t dma_chanHandlerer, gdma_event_data_t *eventData, void *userData) {
@@ -1972,6 +1981,7 @@ public:
 
     void vgaSetup() {
         setCpuFrequencyMhz(240);
+        vTaskPrioritySet(NULL, configMAX_PRIORITIES - 1);
         myVGA.prepareLCDMod();
         myVGA.setupPins(pins);
         setupGDMA_Chan();
@@ -1984,18 +1994,20 @@ public:
         LCD_CAM.lcd_user.lcd_start = 1;
     }
 
-    void drawScene(Player_float &player) {
+    void drawScene() {
         memset(backBuffer, backgroundColor, height * width);
         memset(zBuffer, renderDistance, height * width);
 
-        player.camera(backBuffer, zBuffer, gameGlobals);
+        myPlayer.camera(backBuffer, zBuffer, gameGlobals);
+        playerMove();
     }
 
-    void playerMove(Player_float &player_float) {
-
+    void playerMove() {
+        myPlayer.cameraMovementSDL2(gameGlobals, currentKeys);
     }
 
     void swapBuffers() {
+        Cache_WriteBack_Addr((uint32_t)backBuffer, width * height);
         uint8_t* tempBuffer = backBuffer;
         backBuffer = frontBuffer;
         frontBuffer = tempBuffer;
@@ -2004,16 +2016,25 @@ public:
     ~gameInfo() {
         heap_caps_free(zBuffer);
         heap_caps_free(frontBuffer);
+        heap_caps_free(backBuffer);
     }
 };
 
 
 static void core0Task(void* parameters) {
-    vTaskDelay(500);
+    vTaskDelay(50);
+    pinMode(41, INPUT_PULLUP);
+    pinMode(42, INPUT_PULLUP);
     gameInfo* instance = (gameInfo*)parameters;
-    vTaskDelay(500);
+    vTaskDelay(50);
     instance->vgaSetup();
     while (true) {
+        if (digitalRead(42) == HIGH) {
+            instance->currentKeys.cameraRight = true;
+        }
+        if (digitalRead(42) == LOW) {
+            instance->currentKeys.cameraRight = false;
+        }
         vTaskDelay(10);
     }
 }
@@ -2023,15 +2044,14 @@ static void core1Task(void* parameters) {
     vTaskDelay(500);
     gameInfo* instance = (gameInfo*)parameters;
     vTaskDelay(500);
-    Player_float player = instance->myPlayer;
-    vTaskDelay(500);
     while (true) {
-        instance->drawScene(player);
+        instance->drawScene();
         xSemaphoreTake(instance->mySemaphore, portMAX_DELAY);
         instance->swapBuffers();
         vTaskDelay(10);
     }
 }
+
 
 void createBasicCube(gameInfo &scene, Player_float &player, simple3D_Pos_float position = simple3D_Pos_float(0,0,0), simple3D_Pos_float size = simple3D_Pos_float(1,1,1), SimpleColor color = SimpleColor(0,0,0),
     SimpleColor outlineColor = SimpleColor(0,0,0), bool outline = false, float outlineSize = 10, bool colisions = false, bool visibility = true, bool reactToLight = false) {
@@ -2091,9 +2111,13 @@ Player_float* myPlayer = nullptr;
 
 void setup() {
     Serial.begin(115200);
-    delay(2000);
+    delay(200);
+    Serial.printf("Starting ...");
 
     game = new gameInfo(320, 240);
+    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,0,0));
+    //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,-2,0));
+    //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,0,-2));
 
     xTaskCreatePinnedToCore(
         core0Task,
