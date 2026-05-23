@@ -24,7 +24,6 @@
 
 
 
-
 struct VGATimings {
     int screenWidth, screenHeight;
     int HFront, HBack, Hsync;
