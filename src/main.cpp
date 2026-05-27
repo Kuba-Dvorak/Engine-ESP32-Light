@@ -1847,7 +1847,7 @@ private:
         gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
     }
 
-    Player_float createBasicPlayer(int fov = 90, float senstivity = 0.001, float speed = 0.2, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
+    Player_float createBasicPlayer(int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
     simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
         return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
     }
@@ -2047,8 +2047,10 @@ static void core1Task(void* parameters) {
     gpio_reset_pin(GPIO_NUM_40);
     gpio_reset_pin(GPIO_NUM_36);
     pinMode(41, INPUT_PULLDOWN);
-    pinMode(40, INPUT_PULLDOWN);
+    pinMode(42, INPUT_PULLDOWN);
     pinMode(36, INPUT_PULLDOWN);
+    pinMode(35, INPUT_PULLDOWN);
+    pinMode(37, INPUT_PULLDOWN);
     vTaskDelay(500);
     while (true) {
         instance->drawScene();
@@ -2058,11 +2060,29 @@ static void core1Task(void* parameters) {
         if (digitalRead(41) == LOW) {
             instance->currentKeys.cameraRight = false;
         }
+        if (digitalRead(42) == HIGH) {
+            instance->currentKeys.cameraLeft = true;
+        }
+        if (digitalRead(42) == LOW) {
+            instance->currentKeys.cameraLeft = false;
+        }
         if (digitalRead(36) == HIGH) {
             instance->currentKeys.forward = true;
         }
         if (digitalRead(36) == LOW) {
             instance->currentKeys.forward = false;
+        }
+        if (digitalRead(35) == HIGH) {
+            instance->currentKeys.cameraDown = true;
+        }
+        if (digitalRead(35) == LOW) {
+            instance->currentKeys.cameraDown = false;
+        }
+        if (digitalRead(37) == HIGH) {
+            instance->currentKeys.cameraUp = true;
+        }
+        if (digitalRead(37) == LOW) {
+            instance->currentKeys.cameraUp = false;
         }
         xSemaphoreTake(instance->mySemaphore, portMAX_DELAY);
         instance->swapBuffers();
@@ -2133,9 +2153,13 @@ void setup() {
     Serial.printf("Starting ...");
 
     game = new gameInfo(320, 240);
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,0,0),simple3D_Pos_float(1,2,1), SimpleColor(255,0,0));
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(4,0,0),simple3D_Pos_float(1,2,1), SimpleColor(0,255,0));
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,4,0),simple3D_Pos_float(1,2,1), SimpleColor(255,255,0));
+    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,0,0),simple3D_Pos_float(1,2,1), SimpleColor(255,0,0),SimpleColor(0,0,0)
+        , true);
+    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(4,0,0),simple3D_Pos_float(1,2,1), SimpleColor(0,255,0),SimpleColor(0,0,0)
+        , true);
+    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,4,0),simple3D_Pos_float(1,2,1), SimpleColor(255,255,0), SimpleColor(0,0,0)
+        , true);
+    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-1,-3,-3),simple3D_Pos_float(11,12,1), SimpleColor(0,100,0));
     //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,-2,0));
     //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,0,-2));
 
