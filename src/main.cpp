@@ -29,6 +29,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "regi2c_ctrl.h"
 #include "esp32s3/rom/cache.h"
+#include "alphabet.h"
 
 
 //fully operational 3D raycasting engine
@@ -208,22 +209,6 @@ public:
     }
 
     Position3D_float makeIntoScreensCord(screenAndCameraInfo const &impInfo, float quickZ) {
-
-        if (myPos.z > 0.01) {
-            return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * quickZ) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * quickZ) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), myPos.z));
-        }
-
-        if (std::abs(myPos.z) < 0.005) {
-            myPos.z = 0.006;
-        }
-
-        return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * 100) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * 100) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), myPos.z));
-    }
-
-    Position3D_float makeIntoGradiantable(screenAndCameraInfo const &impInfo, float quickZ) {
-        if (std::abs(myPos.z) < 0.005) {
-            myPos.z = 0.006;
-        }
         return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * quickZ) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * quickZ) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), quickZ));
     }
 };
@@ -341,9 +326,8 @@ enum class LightTypes {
 
 class GlobalPolygon_float {
 private:
-    std::array<Point_float, 3> definingGlobalPoints = {Point_float(simple3D_Pos_float()), Point_float(simple3D_Pos_float()), Point_float(simple3D_Pos_float())};
-    std::array<Position3D_float, 3> definingLocalPoints = {Position3D_float(), Position3D_float(), Position3D_float()};
-    std::array<Position3D_float, 3> definingGradiantablePoints = {Position3D_float(), Position3D_float(), Position3D_float()};
+    std::array<Point_float*, 3> definingGlobalPoints;
+    std::array<Position3D_float*, 3> definingLocalPoints;
     SimpleColor originalColor;
     SimpleColor outlineColor;
     SimpleColor dislayedColor;
@@ -365,7 +349,6 @@ private:
 
     void prepresentAssets(screenAndCameraInfo &cameraInfo) {
         localMinsAmaxs = minsAndMaxs(cameraInfo);
-        localGradiant = getGradiantsfloat(definingGradiantablePoints[0], definingGradiantablePoints[1], definingGradiantablePoints[2]);
 
         localConvertedColor = dislayedColor.convertToBinary();
         localOutlineColor = outlineColor.convertToBinary();
@@ -380,7 +363,7 @@ private:
 
         if (blockification) {
             float sizer = (localMinsAmaxs[0] - localMinsAmaxs[2]) * (localMinsAmaxs[1] - localMinsAmaxs[3]) * 0.5;
-            float middleZ = (definingLocalPoints[0].myPos.z + definingLocalPoints[1].myPos.z + definingLocalPoints[2].myPos.z) * 0.334;
+            float middleZ = (definingLocalPoints[0][0].myPos.z + definingLocalPoints[1][0].myPos.z + definingLocalPoints[2][0].myPos.z) * 0.334;
             localBlockification = int(blockLOD * sqrt(sizer) / middleZ);
         }
 
@@ -394,20 +377,20 @@ private:
     }
 
     std::array<int, 4> minsAndMaxs(screenAndCameraInfo const &camerasInfo) {
-        std::array<int, 4> minsAMax = {int(definingLocalPoints[0].myPos.x), int(definingLocalPoints[0].myPos.y), int(definingLocalPoints[0].myPos.x), int(definingLocalPoints[0].myPos.y)};
+        std::array<int, 4> minsAMax = {int(definingLocalPoints[0][0].myPos.x), int(definingLocalPoints[0][0].myPos.y), int(definingLocalPoints[0][0].myPos.x), int(definingLocalPoints[0][0].myPos.y)};
         for (int i = 0; i < 3; i += 1) {
-            if (definingLocalPoints[i].myPos.x >= minsAMax[0]) {
-                minsAMax[0] = int(definingLocalPoints[i].myPos.x);
+            if (definingLocalPoints[i][0].myPos.x >= minsAMax[0]) {
+                minsAMax[0] = int(definingLocalPoints[i][0].myPos.x);
             }
-            if (definingLocalPoints[i].myPos.y >= minsAMax[1]) {
-                minsAMax[1] = int(definingLocalPoints[i].myPos.y);
+            if (definingLocalPoints[i][0].myPos.y >= minsAMax[1]) {
+                minsAMax[1] = int(definingLocalPoints[i][0].myPos.y);
             }
 
-            if (definingLocalPoints[i].myPos.x <= minsAMax[2]) {
-                minsAMax[2] = int(definingLocalPoints[i].myPos.x);
+            if (definingLocalPoints[i][0].myPos.x <= minsAMax[2]) {
+                minsAMax[2] = int(definingLocalPoints[i][0].myPos.x);
             }
-            if (definingLocalPoints[i].myPos.y <= minsAMax[3]) {
-                minsAMax[3] = int(definingLocalPoints[i].myPos.y);
+            if (definingLocalPoints[i][0].myPos.y <= minsAMax[3]) {
+                minsAMax[3] = int(definingLocalPoints[i][0].myPos.y);
             }
         }
 
@@ -433,10 +416,10 @@ private:
 
         if (xMajority) {
             for (int i = 0; i < 3; i += 1) {
-                if (definingLocalPoints[i].myPos.y >= definingLocalPoints[minsAMax[0]].myPos.y) {
+                if (definingLocalPoints[i][0].myPos.y >= definingLocalPoints[minsAMax[0]][0].myPos.y) {
                     minsAMax[0] = i;
                 }
-                if (definingLocalPoints[i].myPos.y <= definingLocalPoints[minsAMax[1]].myPos.y) {
+                if (definingLocalPoints[i][0].myPos.y <= definingLocalPoints[minsAMax[1]][0].myPos.y) {
                     minsAMax[1] = i;
                 }
             }
@@ -450,10 +433,10 @@ private:
 
         else {
             for (int i = 0; i < 3; i += 1) {
-                if (definingLocalPoints[i].myPos.x >= definingLocalPoints[minsAMax[0]].myPos.x) {
+                if (definingLocalPoints[i][0].myPos.x >= definingLocalPoints[minsAMax[0]][0].myPos.x) {
                     minsAMax[0] = i;
                 }
-                if (definingLocalPoints[i].myPos.x <= definingLocalPoints[minsAMax[1]].myPos.x) {
+                if (definingLocalPoints[i][0].myPos.x <= definingLocalPoints[minsAMax[1]][0].myPos.x) {
                     minsAMax[1] = i;
                 }
             }
@@ -476,9 +459,9 @@ private:
     std::array<float, 3> getKoeficients(bool xMajority, std::array<int, 3> const &infos) {
         std::array<float, 3> returningKoeficients = {};
 
-        float diveder0y = (definingLocalPoints[infos[0]].myPos.y - definingLocalPoints[infos[1]].myPos.y);
-        float diveder1y = (definingLocalPoints[infos[2]].myPos.y - definingLocalPoints[infos[1]].myPos.y);
-        float diveder2y = (definingLocalPoints[infos[0]].myPos.y - definingLocalPoints[infos[2]].myPos.y);
+        float diveder0y = (definingLocalPoints[infos[0]][0].myPos.y - definingLocalPoints[infos[1]][0].myPos.y);
+        float diveder1y = (definingLocalPoints[infos[2]][0].myPos.y - definingLocalPoints[infos[1]][0].myPos.y);
+        float diveder2y = (definingLocalPoints[infos[0]][0].myPos.y - definingLocalPoints[infos[2]][0].myPos.y);
 
         if (diveder0y <= 0.01 && diveder0y >= 0) {
             diveder0y = 0.02;
@@ -504,9 +487,9 @@ private:
             diveder2y = -0.02;
         }
 
-        float diveder0x = (definingLocalPoints[infos[0]].myPos.x - definingLocalPoints[infos[1]].myPos.x);
-        float diveder1x = (definingLocalPoints[infos[2]].myPos.x - definingLocalPoints[infos[1]].myPos.x);
-        float diveder2x = (definingLocalPoints[infos[0]].myPos.x - definingLocalPoints[infos[2]].myPos.x);
+        float diveder0x = (definingLocalPoints[infos[0]][0].myPos.x - definingLocalPoints[infos[1]][0].myPos.x);
+        float diveder1x = (definingLocalPoints[infos[2]][0].myPos.x - definingLocalPoints[infos[1]][0].myPos.x);
+        float diveder2x = (definingLocalPoints[infos[0]][0].myPos.x - definingLocalPoints[infos[2]][0].myPos.x);
 
         if (diveder0x <= 0.01 && diveder0x >= 0) {
             diveder0x = 0.02;
@@ -575,13 +558,12 @@ private:
 public:
     bool reactToLight;
 
-    GlobalPolygon_float(std::array<Point_float, 3> definingGlobalPoints, std::array<Position3D_float, 3> definingLocalPoints, std::array<Position3D_float, 3> definingGradiantablePoints, SimpleColor impCol, int index, bool drawOut, bool reactToLight) {
+    GlobalPolygon_float(std::array<Point_float*, 3> definingGlobalPoints, std::array<Position3D_float*, 3> definingLocalPoints, SimpleColor impCol, int index, bool drawOut, bool reactToLight) {
         this->definingGlobalPoints = definingGlobalPoints;
         this->definingLocalPoints = definingLocalPoints;
-        this->definingGradiantablePoints = definingGradiantablePoints;
         this->originalColor = impCol;
-        this->lightingVectors[0] = definingGlobalPoints[0].getPosRef().makeAVector(definingGlobalPoints[1].getPosRef());
-        this->lightingVectors[1] = definingGlobalPoints[0].getPosRef().makeAVector(definingGlobalPoints[2].getPosRef());
+        this->lightingVectors[0] = definingGlobalPoints[0][0].getPosRef().makeAVector(definingGlobalPoints[1][0].getPosRef());
+        this->lightingVectors[1] = definingGlobalPoints[0][0].getPosRef().makeAVector(definingGlobalPoints[2][0].getPosRef());
         this->mainNormal = lightingVectors[0].crossProduct3D(lightingVectors[1]);
         this->dislayedColor = impCol;
         this->id = index;
@@ -594,19 +576,19 @@ public:
             bool leftRight = false;
             int minX = 0;
             int maxX = 0;
-            if (definingLocalPoints[localIndexesNumbers[0]].myPos.x + (localKoeficients[0] * (localMinsAmaxs[3] - definingLocalPoints[localIndexesNumbers[0]].myPos.y)) > definingLocalPoints[localIndexesNumbers[0]].myPos.x + (localKoeficients[2] * (localMinsAmaxs[3] - definingLocalPoints[localIndexesNumbers[0]].myPos.y))) {
+            if (definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[0] * (localMinsAmaxs[3] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y)) > definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[2] * (localMinsAmaxs[3] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y))) {
                 leftRight = true;
             }
 
             for (int yPos = localMinsAmaxs[3]; yPos < localMinsAmaxs[1]+1; yPos += localBlockification) {
-                int xPos2 = int(definingLocalPoints[localIndexesNumbers[0]].myPos.x + (localKoeficients[0] * (yPos - definingLocalPoints[localIndexesNumbers[0]].myPos.y)));
+                int xPos2 = int(definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[0] * (yPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y)));
                 int xPos1 = 0;
-                if (yPos >= definingLocalPoints[localIndexesNumbers[2]].myPos.y) {
-                    xPos1 = int(definingLocalPoints[localIndexesNumbers[0]].myPos.x + (localKoeficients[2] * (yPos - definingLocalPoints[localIndexesNumbers[0]].myPos.y)));
+                if (yPos >= definingLocalPoints[localIndexesNumbers[2]][0].myPos.y) {
+                    xPos1 = int(definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[2] * (yPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y)));
                 }
 
                 else {
-                    xPos1 = int(definingLocalPoints[localIndexesNumbers[2]].myPos.x + (localKoeficients[1] * (yPos - definingLocalPoints[localIndexesNumbers[2]].myPos.y)));
+                    xPos1 = int(definingLocalPoints[localIndexesNumbers[2]][0].myPos.x + (localKoeficients[1] * (yPos - definingLocalPoints[localIndexesNumbers[2]][0].myPos.y)));
                 }
 
                 if (leftRight) {
@@ -635,7 +617,7 @@ public:
                 }
 
                 for (int xPos = minX; xPos < maxX+1; xPos += 1) {
-                    uint8_t globalZ = uint8_t(1.0f / (definingGradiantablePoints[0].myPos.z + (xPos - definingGradiantablePoints[0].myPos.x) * localGradiant[0] + (yPos - definingGradiantablePoints[0].myPos.y) * localGradiant[1]));
+                    uint8_t globalZ = uint8_t(1.0f / (definingLocalPoints[0][0].myPos.z + (xPos - definingLocalPoints[0][0].myPos.x) * localGradiant[0] + (yPos - definingLocalPoints[0][0].myPos.y) * localGradiant[1]));
 
                     if (blockification) {
                         for (int yPosReal = yPos; yPosReal < yPos + localBlockification; yPosReal += 1) {
@@ -677,21 +659,21 @@ public:
             int minY = 0;
             int maxY = 0;
 
-            if (definingLocalPoints[localIndexesNumbers[0]].myPos.y + (localKoeficients[2] * (localMinsAmaxs[2] - definingLocalPoints[localIndexesNumbers[0]].myPos.x)) < definingLocalPoints[localIndexesNumbers[0]].myPos.y + (localKoeficients[0] * (localMinsAmaxs[2] - definingLocalPoints[localIndexesNumbers[0]].myPos.x))) {
+            if (definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[2] * (localMinsAmaxs[2] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x)) < definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[0] * (localMinsAmaxs[2] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x))) {
                 leftRight = true;
             }
 
             for (int xPos = localMinsAmaxs[2]; xPos < localMinsAmaxs[0]+1; xPos += localBlockification) {
 
-                int yPos2 = std::round(definingLocalPoints[localIndexesNumbers[0]].myPos.y + (localKoeficients[0] * (xPos - definingLocalPoints[localIndexesNumbers[0]].myPos.x)));
+                int yPos2 = std::round(definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[0] * (xPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x)));
                 int yPos1 = 0;
 
-                if (xPos >= definingLocalPoints[localIndexesNumbers[2]].myPos.x) {
-                    yPos1 = std::round(definingLocalPoints[localIndexesNumbers[0]].myPos.y + (localKoeficients[2] * (xPos - definingLocalPoints[localIndexesNumbers[0]].myPos.x)));
+                if (xPos >= definingLocalPoints[localIndexesNumbers[2]][0].myPos.x) {
+                    yPos1 = std::round(definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[2] * (xPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x)));
                 }
 
                 else {
-                    yPos1 = std::round(definingLocalPoints[localIndexesNumbers[2]].myPos.y + (localKoeficients[1] * (xPos - definingLocalPoints[localIndexesNumbers[2]].myPos.x)));
+                    yPos1 = std::round(definingLocalPoints[localIndexesNumbers[2]][0].myPos.y + (localKoeficients[1] * (xPos - definingLocalPoints[localIndexesNumbers[2]][0].myPos.x)));
                 }
 
                 if (leftRight) {
@@ -720,7 +702,7 @@ public:
                 }
 
                 for (int yPos = minY; yPos < maxY+1; yPos += 1) {
-                    uint8_t globalZ = uint8_t(1.0f / (definingGradiantablePoints[0].myPos.z + (xPos - definingGradiantablePoints[0].myPos.x) * localGradiant[0] + (yPos - definingGradiantablePoints[0].myPos.y) * localGradiant[1]));
+                    uint8_t globalZ = uint8_t(1.0f / (definingLocalPoints[0][0].myPos.z + (xPos - definingLocalPoints[0][0].myPos.x) * localGradiant[0] + (yPos - definingLocalPoints[0][0].myPos.y) * localGradiant[1]));
 
                     if (blockification) {
                         for (int xPosReal = xPos; xPosReal < xPos + localBlockification; xPosReal += 1) {
@@ -756,20 +738,15 @@ public:
         }
     }
 
-    void thisChange(std::array<Point_float, 3> newdefiningGlobalPoints, std::array<Position3D_float, 3> newdefiningLocalPoints, std::array<Position3D_float, 3> newdefiningGradiantablePoints, bool drawOut, screenAndCameraInfo &cameraInfo) {
-        definingGlobalPoints = newdefiningGlobalPoints;
-        definingLocalPoints = newdefiningLocalPoints;
-        definingGradiantablePoints = newdefiningGradiantablePoints;
-        lightingVectors[0] = definingGlobalPoints[0].getPosRef().makeAVector(definingGlobalPoints[1].getPosRef());
-        lightingVectors[1] = definingGlobalPoints[0].getPosRef().makeAVector(definingGlobalPoints[2].getPosRef());
+    void thisChange(bool drawOut, screenAndCameraInfo &cameraInfo) {
+        lightingVectors[0] = definingGlobalPoints[0][0].getPosRef().makeAVector(definingGlobalPoints[1][0].getPosRef());
+        lightingVectors[1] = definingGlobalPoints[0][0].getPosRef().makeAVector(definingGlobalPoints[2][0].getPosRef());
         mainNormal = lightingVectors[0].crossProduct3D(lightingVectors[1]);
         shouldDraw = drawOut;
         prepresentAssets(cameraInfo);
     }
 
-    void playerChange(std::array<Position3D_float, 3> newdefiningLocalPoints, std::array<Position3D_float, 3> newdefiningGradiantablePoints, screenAndCameraInfo &cameraInfo, bool blockification, float blockDetail, bool drawOut) {
-        definingLocalPoints = newdefiningLocalPoints;
-        definingGradiantablePoints = newdefiningGradiantablePoints;
+    void playerChange(screenAndCameraInfo &cameraInfo, bool drawOut) {
         shouldDraw = drawOut;
         prepresentAssets(cameraInfo);
     }
@@ -812,7 +789,7 @@ public:
     }
 
     void lightingDuty(LightRay_float &lightPoint, int curentPos) {
-        Vector3D_float pointVec = lightPoint.myPos.makeAVector(definingGlobalPoints[0].getPosRef());
+        Vector3D_float pointVec = lightPoint.myPos.makeAVector(definingGlobalPoints[0][0].getPosRef());
         float mainDeterminant = mainNormal.dotProduct(lightPoint.headingVec);
         Vector3D_float secondaryNormal = pointVec.crossProduct3D(lightPoint.headingVec);
         if (mainDeterminant > -0.01) {
@@ -1102,7 +1079,6 @@ private:
     std::array<int, 36> links{};
     std::array<Point_float, 8> points{};
     std::array<Position3D_float, 8> pseudoPos{};
-    std::array<Position3D_float, 8> pseudoPosGradiant{};
     simple3D_Pos_float centrePoint;
     SimpleColor objectColor;
     int numsOfPoints;
@@ -1121,8 +1097,10 @@ private:
         for (int i = 0; i < 8; i += 1) {
             Position3D_float oneLocalPoint = points[i].getRelativePos(myInfo.headingVector, myInfo.upVector, myInfo.rightVector, myInfo.originPoint);
             float quickZ = 1.0f / pseudoPos[i].myPos.z;
+            if (std::abs(quickZ) <= 0.01) {
+                quickZ = 100;
+            }
             pseudoPos[i] = oneLocalPoint.makeIntoScreensCord(myInfo.cameraInfo, quickZ);
-            pseudoPosGradiant[i] = oneLocalPoint.makeIntoGradiantable(myInfo.cameraInfo, quickZ);
         }
 
         int indexNum = firstPolygonNum;
@@ -1133,8 +1111,7 @@ private:
                 dontDrawOut = true;
             }
 
-            globalPolygons[indexNum].thisChange({points[links[i]], points[links[i+1]], points[links[i+2]]}, {pseudoPos[links[i]], pseudoPos[links[i+1]], pseudoPos[links[i+2]]},
-                {pseudoPosGradiant[links[i]], pseudoPosGradiant[links[i+1]], pseudoPosGradiant[links[i+2]]}, dontDrawOut, myInfo.cameraInfo);
+            globalPolygons[indexNum].thisChange(dontDrawOut, myInfo.cameraInfo);
 
             globalPolygons[indexNum].rollBackColor();
 
@@ -1225,13 +1202,11 @@ public:
             this->points[i] = points[i];
             this->points[i].setupUnitVectors(centrePoint);
             this->pseudoPos[i] = Position3D_float(simple3D_Pos_float());
-            this->pseudoPosGradiant[i] = Position3D_float(simple3D_Pos_float());
         }
 
-        for (int i = 0; i < 12; i += 1) {
-            globalPolygons.push_back(GlobalPolygon_float({Point_float(simple3D_Pos_float(0,0,0)),Point_float(simple3D_Pos_float(0,0,0)),Point_float(simple3D_Pos_float(0,0,0))},
-                {Position3D_float(simple3D_Pos_float(0,0,0)),Position3D_float(simple3D_Pos_float(0,0,0)),Position3D_float(simple3D_Pos_float(0,0,0))}, {Position3D_float(simple3D_Pos_float(0,0,0)),Position3D_float(simple3D_Pos_float(0,0,0)),Position3D_float(simple3D_Pos_float(0,0,0))},
-                objectColor, globalPolygonsPos, true, reactToLight));
+        for (int i = 0; i < 36; i += 3) {
+            globalPolygons.push_back(GlobalPolygon_float({&points[links[i]], &points[links[i+1]], &points[links[i+2]]}, {&pseudoPos[links[i]], &pseudoPos[links[i+1]], &pseudoPos[links[i+2]]}
+                ,objectColor, globalPolygonsPos, true, reactToLight));
             globalPolygonsPos += 1;
         }
         retypePolygonsThis(currentInfo, globalPolygons, allLights);
@@ -1242,8 +1217,10 @@ public:
         for (int i = 0; i < 8; i += 1) {
             Position3D_float oneLocalPoint = points[i].getRelativePos(myInfo.headingVector, myInfo.upVector, myInfo.rightVector, myInfo.originPoint);
             float quickZ = 1.0f / pseudoPos[i].myPos.z;
+            if (std::abs(quickZ) <= 0.01) {
+                quickZ = 100;
+            }
             pseudoPos[i] = oneLocalPoint.makeIntoScreensCord(myInfo.cameraInfo, quickZ);
-            pseudoPosGradiant[i] = oneLocalPoint.makeIntoGradiantable(myInfo.cameraInfo, quickZ);
         }
 
         int indexNum = firstPolygonNum;
@@ -1254,8 +1231,7 @@ public:
                 continue;
             }
 
-            globalPolygons[indexNum].playerChange({pseudoPos[links[i]], pseudoPos[links[i+1]], pseudoPos[links[i+2]]}, {pseudoPosGradiant[links[i]], pseudoPosGradiant[links[i+1]], pseudoPosGradiant[links[i+2]]},
-                myInfo.cameraInfo, myInfoLOD.blockify , myInfoLOD.LODLevel, true);
+            globalPolygons[indexNum].playerChange(myInfo.cameraInfo, true);
             indexNum += 1;
 
         }
@@ -1355,13 +1331,14 @@ public:
 };
 
 
-void createCube(simple3D_Pos_float onePos, simple3D_Pos_float oneSize, SimpleColor objColor, SimpleColor outColor, bool stroked, std::vector<GlobalPolygon_float> &allPolygons, int &currentPolygon, std::vector<LightSource> &allLights,
-    std::vector<Cube3D_float> &allObjects, playerFullInfo &currentPlayerInfo,
+void createCube(simple3D_Pos_float onePos, simple3D_Pos_float oneSize, SimpleColor objColor, SimpleColor outColor, bool stroked, std::vector<GlobalPolygon_float> &allPolygons, int &currentPolygon
+    ,std::vector<LightSource> &allLights,
+    std::vector<Cube3D_float*> &allObjects, playerFullInfo &currentPlayerInfo,
     float outlineSize = 10, bool colisions = false, bool visibility = false, bool blockify = true, float lodLevel = 0.1, bool lighted = false) {
 
     simple3D_Pos_float centre = simple3D_Pos_float(onePos.x + (oneSize.x/2), onePos.y + (oneSize.y/2), onePos.z + (oneSize.z/2));
 
-    allObjects.push_back(Cube3D_float(8, 36, {
+    Cube3D_float* oneCube = new Cube3D_float(8, 36, {
         Point_float(onePos.changedBy(0, 0, 0)),
         Point_float(onePos.changedBy(oneSize.x, 0, 0)),
         Point_float(onePos.changedBy(oneSize.x, oneSize.y, 0)),
@@ -1378,7 +1355,10 @@ void createCube(simple3D_Pos_float onePos, simple3D_Pos_float oneSize, SimpleCol
          1,2,3, 1,3,7,  // X=1
          0,1,7, 0,7,5,  // Y=0
          2,4,3, 2,6,4   // Y=1
-    },allPolygons, currentPolygon, allLights, currentPlayerInfo, oneSize, objColor, blockify, lodLevel, outColor, stroked, outlineSize, visibility, colisions, lighted));
+    },allPolygons, currentPolygon, allLights, currentPlayerInfo, oneSize, objColor, blockify,
+    lodLevel, outColor, stroked, outlineSize, visibility, colisions, lighted);
+
+    allObjects.push_back(oneCube);
 }
 
 
@@ -1400,8 +1380,8 @@ std::vector<LightSource> prepareLightList() {
     return newList;
 }
 
-std::vector<Cube3D_float> prepareObjectList() {
-    std::vector<Cube3D_float> newList;
+std::vector<Cube3D_float*> prepareObjectList() {
+    std::vector<Cube3D_float*> newList;
     return newList;
 }
 
@@ -1410,7 +1390,7 @@ struct basicInfo {
     std::vector<GlobalPolygon_float> polygonList;
     int currePosPolygon = 0;
     std::vector<LightSource> lightSourcesList;
-    std::vector<Cube3D_float> objectList;
+    std::vector<Cube3D_float*> objectList;
 
     basicInfo() {
         this->polygonList = preparePolygonList();
@@ -1512,18 +1492,19 @@ public:
 
     void camera(uint8_t* sdlBuffer, uint8_t* zBuffer, basicInfo &globalInfo) {
         linearColisionSetup();
-        for (Cube3D_float &oneObject : globalInfo.objectList) {
-            if (oneObject.visibility) {
-                oneObject.drawOutFastSDL2(myBasicInfo, sdlBuffer, zBuffer, globalInfo.polygonList);
+        for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+            Cube3D_float* oneObject = globalInfo.objectList[i];
+            if (oneObject[0].visibility) {
+                oneObject[0].drawOutFastSDL2(myBasicInfo, sdlBuffer, zBuffer, globalInfo.polygonList);
             }
-            if (oneObject.colision) {
-                if (oneObject.colide(nextPositionX, sizeBox, sizeRadius)) {
+            if (oneObject[0].colision) {
+                if (oneObject[0].colide(nextPositionX, sizeBox, sizeRadius)) {
                     colidingX = true;
                 }
-                if (oneObject.colide(nextPositionY, sizeBox, sizeRadius)) {
+                if (oneObject[0].colide(nextPositionY, sizeBox, sizeRadius)) {
                     colidingY = true;
                 }
-                if (oneObject.colide(nextPositionZ, sizeBox, sizeRadius)) {
+                if (oneObject[0].colide(nextPositionZ, sizeBox, sizeRadius)) {
                     colidingZ = true;
                 }
             }
@@ -1540,8 +1521,9 @@ public:
                 rightVec.setVector(simple3D_Pos_float(valuesRight.cosAngleY * valuesRight.cosAngleZ, valuesRight.sinAngleY * valuesRight.cosAngleZ, 0));
                 upVec.setVector(simple3D_Pos_float(valuesUp.cosAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleZ));
                 myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
-                for (Cube3D_float &oneObject : globalInfo.objectList) {
-                    oneObject.retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+                    Cube3D_float* oneObject = globalInfo.objectList[i];
+                    oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
                 }
             }
         }
@@ -1554,8 +1536,9 @@ public:
                 rightVec.setVector(simple3D_Pos_float(valuesRight.cosAngleY * valuesRight.cosAngleZ, valuesRight.sinAngleY * valuesRight.cosAngleZ, 0));
                 upVec.setVector(simple3D_Pos_float(valuesUp.cosAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleZ));
                 myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
-                for (Cube3D_float &oneObject : globalInfo.objectList) {
-                    oneObject.retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+                    Cube3D_float* oneObject = globalInfo.objectList[i];
+                    oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
                 }
             }
         }
@@ -1568,8 +1551,9 @@ public:
             rightVec.setVector(simple3D_Pos_float(valuesRight.cosAngleY * valuesRight.cosAngleZ, valuesRight.sinAngleY * valuesRight.cosAngleZ, 0));
             upVec.setVector(simple3D_Pos_float(valuesUp.cosAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleZ));
             myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
-            for (Cube3D_float &oneObject : globalInfo.objectList) {
-                oneObject.retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+            for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+                Cube3D_float* oneObject = globalInfo.objectList[i];
+                oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
             }
         }
         if (keysPressed.cameraRight) {
@@ -1581,8 +1565,9 @@ public:
             rightVec.setVector(simple3D_Pos_float(valuesRight.cosAngleY * valuesRight.cosAngleZ, valuesRight.sinAngleY * valuesRight.cosAngleZ, 0));
             upVec.setVector(simple3D_Pos_float(valuesUp.cosAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleY * valuesUp.cosAngleZ, valuesUp.sinAngleZ));
             myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
-            for (Cube3D_float &oneObject : globalInfo.objectList) {
-                oneObject.retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+            for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+                Cube3D_float* oneObject = globalInfo.objectList[i];
+                oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
             }
         }
     }
@@ -1669,8 +1654,9 @@ public:
 
         if (!colidingX || !colidingY || !colidingZ) {
             myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
-            for (Cube3D_float &oneObject : globalInfo.objectList) {
-                oneObject.retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+            for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+                Cube3D_float* oneObject = globalInfo.objectList[i];
+                oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
             }
         }
 
@@ -1793,6 +1779,19 @@ struct VGATimings {
 };
 
 
+enum class gameMode {
+    game3D = 1,
+    game2D = 2,
+    text = 3
+};
+
+
+Player_float createBasicPlayer(int height, int width, bool blockify = true, float lodLevel = 0.5, int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
+    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
+    return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
+}
+
+
 class gameInfo {
 private:
     uint8_t* zBuffer;
@@ -1847,11 +1846,6 @@ private:
         gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
     }
 
-    Player_float createBasicPlayer(int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
-    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
-        return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
-    }
-
 public:
 
     uint8_t renderDistance;
@@ -1871,12 +1865,14 @@ public:
     pressedKeys currentKeys;
     lldesc_t* dmaDesc;
     Player_float myPlayer;
+    gameMode currentMode;
 
-    gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18},
-        uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = false, float lodLevel = 0.5) {
+    gameInfo(Player_float player, int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18},
+        uint8_t renderDistance = 255, gameMode curentMode = gameMode::game3D, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = true, float lodLevel = 0.5) {
         this->width = windowWidth;
         this->height = windowHeight;
         this->myVGA = VGATimings();
+        this->currentMode = curentMode;
         this->virLineCount = 0;
         this->activeDesc = 0;
         this->doubeling = false;
@@ -1931,8 +1927,9 @@ public:
         this->blockify = blockify;
         this->activeStart = myVGA.VBack + myVGA.Vsync;
         this->activeEnd = activeStart + myVGA.screenHeight;
-        this->myPlayer = createBasicPlayer();
+        this->myPlayer = player;
         this->doubled = false;
+
     }
 
 
@@ -2022,6 +2019,83 @@ public:
         frontBuffer = tempBuffer;
     }
 
+    void drawPixel(int x, int y, uint8_t color) {
+        if (x >= width) {
+            x = width - 1;
+        }
+        if (x <= 0) {
+            x = 0;
+        }
+        if (y >= height) {
+            y = height - 1;
+        }
+        if (y <= 0) {
+            y = 0;
+        }
+        backBuffer[y * width + x] = color;
+    }
+
+
+    void drawSymbols(const std::vector<const char*>& inputa, int x = 0, int y = 0, uint8_t color = 0b11111111) {
+        // row = one string, multiple rows = list of strings
+        // start = top corner
+        // # = draw, anything else = no draw
+        int curX = x;
+        int curY = y;
+        for (int i = 0; i < inputa.size(); i += 1) {
+            const char* oneString = inputa[i];
+            curX = x;
+            for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
+                if (oneString[j] == '#') {
+                    drawPixel(curX, curY, color);
+                }
+                curX += 1;
+            }
+            curY += 1;
+        }
+    }
+
+
+    void writeOutText(const char* text, int posX = 0, int posY = 0, int charDistance = basicAsciAlpbt::alphabetSizeStandars + 2,
+        int charDistanceY = basicAsciAlpbt::alphabetSizeStandarsY + 2, uint8_t color = 0b11111111) {
+        int curX = posX;
+        int curY = posY;
+        while (text[0]) {
+            if (text[0] == '}') {
+                curY += charDistanceY;
+                curX = posX;
+                text += 1;
+                continue;
+            }
+
+            const std::vector<const char*>& oneInput = *basicAsciAlpbt::getChar(text[0]);
+            drawSymbols(oneInput, curX, curY, color);
+            curX += charDistance;
+            text += 1;
+        }
+    }
+
+
+    void turnOnScreen() {
+        gdma_tx_event_callbacks_t myCallbacks = {
+            .on_trans_eof = interuptGDMA_callback
+        };
+        gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
+    }
+
+
+    void turnOffScreen() {
+        gdma_tx_event_callbacks_t myCallbacks = {
+            .on_trans_eof = NULL
+        };
+        gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, NULL);
+    }
+
+
+    void clearScreen() {
+        memset(backBuffer, backgroundColor, height * width);
+    }
+
     ~gameInfo() {
         heap_caps_free(zBuffer);
         heap_caps_free(frontBuffer);
@@ -2051,6 +2125,10 @@ static void core1Task(void* parameters) {
     pinMode(36, INPUT_PULLDOWN);
     pinMode(35, INPUT_PULLDOWN);
     pinMode(37, INPUT_PULLDOWN);
+    Serial.printf("heap free: %d \n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    Serial.printf("player ptr: %p \n", instance->myPlayer);
+    Serial.printf("game ptr: %p \n", instance);
+    //instance->currentMode = gameMode::text;
     vTaskDelay(500);
     while (true) {
         instance->drawScene();
@@ -2099,27 +2177,27 @@ void createBasicCube(gameInfo &scene, Player_float &player, simple3D_Pos_float p
 
 
 void rotateBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, float angleXY = 0, float angleXZ = 0, float angleYZ = 0) {
-    scene.gameGlobals.objectList[cubeIndex].rotates(angleYZ, angleXZ, angleXY, player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex][0].rotates(angleYZ, angleXZ, angleXY, player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void moveBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float difference = simple3D_Pos_float(0,0,0)) {
-    scene.gameGlobals.objectList[cubeIndex].changePos(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex][0].changePos(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void setPosBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float newPosition = simple3D_Pos_float(0,0,0)) {
-    scene.gameGlobals.objectList[cubeIndex].setPos(newPosition,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex][0].setPos(newPosition,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void changeSizeBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float difference = simple3D_Pos_float(0,0,0)) {
-    scene.gameGlobals.objectList[cubeIndex].changeSize(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex][0].changeSize(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void setSizeBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float newSize = simple3D_Pos_float(1,1,1)) {
-    scene.gameGlobals.objectList[cubeIndex].setSize(newSize,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex][0].setSize(newSize,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
@@ -2149,19 +2227,23 @@ Player_float* myPlayer = nullptr;
 
 void setup() {
     Serial.begin(115200);
-    delay(200);
+    delay(1000);
     Serial.printf("Starting ...");
+    Serial.printf("Total heap: %u bytes\n", ESP.getHeapSize());
+    Serial.printf("Free heap: %u bytes\n", ESP.getFreeHeap());
+    Serial.printf("Minimum free heap ever: %u bytes\n", ESP.getMinFreeHeap());
 
-    game = new gameInfo(320, 240);
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,0,0),simple3D_Pos_float(1,2,1), SimpleColor(255,0,0),SimpleColor(0,0,0)
-        , true);
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(4,0,0),simple3D_Pos_float(1,2,1), SimpleColor(0,255,0),SimpleColor(0,0,0)
-        , true);
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-2,4,0),simple3D_Pos_float(1,2,1), SimpleColor(255,255,0), SimpleColor(0,0,0)
-        , true);
+    game = new gameInfo(createBasicPlayer(320, 240),320, 240);
+    for (int i = 0; i < 8; i += 1) {
+        createBasicCube(*game, game->myPlayer, simple3D_Pos_float(getRandomfloat(-10,20),getRandomfloat(-10,20),getRandomfloat(-10,20)),
+            simple3D_Pos_float(getRandomfloat(1,5),getRandomfloat(1,5),getRandomfloat(1,5)),
+        SimpleColor(getRandomInt(0,255),getRandomInt(0,255),getRandomInt(0,255)), SimpleColor(0,0,0), true);
+    }
+
     createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-1,-3,-3),simple3D_Pos_float(11,12,1), SimpleColor(0,100,0));
     //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,-2,0));
     //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,0,-2));
+    Serial.printf("Free heap after blocks: %u bytes\n", ESP.getFreeHeap());
 
     xTaskCreatePinnedToCore(
         core0Task,
