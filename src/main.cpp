@@ -29,7 +29,472 @@
 #include "soc/rtc_cntl_reg.h"
 #include "regi2c_ctrl.h"
 #include "esp32s3/rom/cache.h"
-#include "alphabet.h"
+#include <Wire.h>
+
+
+namespace basicAsciAlpbt {
+    const int alphabetSizeStandars = 5;
+    const int alphabetSizeStandarsY = 7;
+
+    const char* const charA[] = {
+        ".###.",
+        "#...#",
+        "#...#",
+        "#####",
+        "#...#",
+        "#...#",
+        "#...#"
+    };
+
+    const char* const charB[] = {
+        "####.",
+        "#...#",
+        "#...#",
+        "####.",
+        "#...#",
+        "#...#",
+        "####."
+    };
+
+    const char* const charC[] = {
+        ".####",
+        "#....",
+        "#....",
+        "#....",
+        "#....",
+        "#....",
+        ".####"
+    };
+
+    const char* const charD[] = {
+        "####.",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        "####."
+    };
+
+    const char* const charE[] = {
+        "#####",
+        "#....",
+        "#....",
+        "####.",
+        "#....",
+        "#....",
+        "#####"
+    };
+
+    const char* const charF[] = {
+        "#####",
+        "#....",
+        "#....",
+        "####.",
+        "#....",
+        "#....",
+        "#...."
+    };
+
+    const char* const charG[] = {
+        ".####",
+        "#....",
+        "#....",
+        "#..##",
+        "#...#",
+        "#...#",
+        ".####"
+    };
+
+    const char* const charH[] = {
+        "#...#",
+        "#...#",
+        "#...#",
+        "#####",
+        "#...#",
+        "#...#",
+        "#...#"
+    };
+
+    const char* const charI[] = {
+        "#####",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#..",
+        "#####"
+    };
+
+    const char* const charJ[] = {
+        "#####",
+        "...#.",
+        "...#.",
+        "...#.",
+        "...#.",
+        "#..#.",
+        ".##.."
+    };
+
+    const char* const charK[] = {
+        "#...#",
+        "#..#.",
+        "#.#..",
+        "##...",
+        "#.#..",
+        "#..#.",
+        "#...#"
+    };
+
+    const char* const charL[] = {
+        "#....",
+        "#....",
+        "#....",
+        "#....",
+        "#....",
+        "#....",
+        "#####"
+    };
+
+    const char* const charM[] = {
+        "#...#",
+        "##.##",
+        "#.#.#",
+        "#.#.#",
+        "#...#",
+        "#...#",
+        "#...#"
+    };
+
+    const char* const charN[] = {
+        "#...#",
+        "##..#",
+        "#.#.#",
+        "#..##",
+        "#...#",
+        "#...#",
+        "#...#"
+    };
+
+    const char* const charO[] = {
+        ".###.",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        ".###."
+    };
+
+    const char* const charP[] = {
+        "####.",
+        "#...#",
+        "#...#",
+        "####.",
+        "#....",
+        "#....",
+        "#...."
+    };
+
+    const char* const charQ[] = {
+        ".###.",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#.#.#",
+        "#..##",
+        ".####"
+    };
+
+    const char* const charR[] = {
+        "####.",
+        "#...#",
+        "#...#",
+        "####.",
+        "#.#..",
+        "#..#.",
+        "#...#"
+    };
+
+    const char* const charS[] = {
+        ".####",
+        "#....",
+        "#....",
+        ".###.",
+        "....#",
+        "....#",
+        "####."
+    };
+
+    const char* const charT[] = {
+        "#####",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#.."
+    };
+
+    const char* const charU[] = {
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        ".###."
+    };
+
+    const char* const charV[] = {
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        "#...#",
+        ".#.#.",
+        "..#.."
+    };
+
+    const char* const charW[] = {
+        "#...#",
+        "#...#",
+        "#...#",
+        "#.#.#",
+        "#.#.#",
+        "##.##",
+        "#...#"
+    };
+
+    const char* const charX[] = {
+        "#...#",
+        "#...#",
+        ".#.#.",
+        "..#..",
+        ".#.#.",
+        "#...#",
+        "#...#"
+    };
+
+    const char* const charY[] = {
+        "#...#",
+        "#...#",
+        ".#.#.",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#.."
+    };
+
+    const char* const charZ[] = {
+        "#####",
+        "....#",
+        "...#.",
+        "..#..",
+        ".#...",
+        "#....",
+        "#####"
+    };
+
+    // Číslice
+    const char* const char0[] = {
+        ".###.",
+        "#...#",
+        "#..##",
+        "#.#.#",
+        "##..#",
+        "#...#",
+        ".###."
+    };
+
+    const char* const char1[] = {
+        "..#..",
+        ".##..",
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#..",
+        "#####"
+    };
+
+    const char* const char2[] = {
+        ".###.",
+        "#...#",
+        "....#",
+        "..##.",
+        ".#...",
+        "#....",
+        "#####"
+    };
+
+    const char* const char3[] = {
+        "#####",
+        "....#",
+        "...#.",
+        "..##.",
+        "....#",
+        "#...#",
+        ".###."
+    };
+
+    const char* const char4[] = {
+        "#...#",
+        "#...#",
+        "#...#",
+        "#####",
+        "....#",
+        "....#",
+        "....#"
+    };
+
+    const char* const char5[] = {
+        "#####",
+        "#....",
+        "#....",
+        "####.",
+        "....#",
+        "....#",
+        "####."
+    };
+
+    const char* const char6[] = {
+        ".####",
+        "#....",
+        "#....",
+        "####.",
+        "#...#",
+        "#...#",
+        ".###."
+    };
+
+    const char* const char7[] = {
+        "#####",
+        "....#",
+        "...#.",
+        "..#..",
+        ".#...",
+        ".#...",
+        ".#..."
+    };
+
+    const char* const char8[] = {
+        ".###.",
+        "#...#",
+        "#...#",
+        ".###.",
+        "#...#",
+        "#...#",
+        ".###."
+    };
+
+    const char* const char9[] = {
+        ".###.",
+        "#...#",
+        "#...#",
+        ".####",
+        "....#",
+        "....#",
+        "####."
+    };
+
+    // Základní interpunkce
+    const char* const charSpace[] = {
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        "....."
+    };
+
+    const char* const charDot[] = {
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        ".....",
+        ".##..",
+        ".##.."
+    };
+
+    const char* const charExcl[] = {
+        "..#..",
+        "..#..",
+        "..#..",
+        "..#..",
+        ".....",
+        ".##..",
+        ".##.."
+    };
+
+    const char* const charColon[] = {
+        ".....",
+        ".##..",
+        ".##..",
+        ".....",
+        ".##..",
+        ".##..",
+        "....."
+    };
+
+    const char* const charMinus[] = {
+        ".....",
+        ".....",
+        ".....",
+        "#####",
+        ".....",
+        ".....",
+        "....."
+    };
+
+    inline const char* const* getChar(char c) {
+        switch (c) {
+            case 'A': case 'a': return charA;
+            case 'B': case 'b': return charB;
+            case 'C': case 'c': return charC;
+            case 'D': case 'd': return charD;
+            case 'E': case 'e': return charE;
+            case 'F': case 'f': return charF;
+            case 'G': case 'g': return charG;
+            case 'H': case 'h': return charH;
+            case 'I': case 'i': return charI;
+            case 'J': case 'j': return charJ;
+            case 'K': case 'k': return charK;
+            case 'L': case 'l': return charL;
+            case 'M': case 'm': return charM;
+            case 'N': case 'n': return charN;
+            case 'O': case 'o': return charO;
+            case 'P': case 'p': return charP;
+            case 'Q': case 'q': return charQ;
+            case 'R': case 'r': return charR;
+            case 'S': case 's': return charS;
+            case 'T': case 't': return charT;
+            case 'U': case 'u': return charU;
+            case 'V': case 'v': return charV;
+            case 'W': case 'w': return charW;
+            case 'X': case 'x': return charX;
+            case 'Y': case 'y': return charY;
+            case 'Z': case 'z': return charZ;
+            case '0': return char0;
+            case '1': return char1;
+            case '2': return char2;
+            case '3': return char3;
+            case '4': return char4;
+            case '5': return char5;
+            case '6': return char6;
+            case '7': return char7;
+            case '8': return char8;
+            case '9': return char9;
+            case ' ': return charSpace;
+            case '.': return charDot;
+            case '!': return charExcl;
+            case ':': return charColon;
+            case '-': return charMinus;
+            default:  return charSpace;
+        }
+    }
+}
 
 
 //fully operational 3D raycasting engine
@@ -209,12 +674,20 @@ public:
     }
 
     Position3D_float makeIntoScreensCord(screenAndCameraInfo const &impInfo, float quickZ) {
-        return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * quickZ) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * quickZ) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), quickZ));
+        if (myPos.z > 0.01) {
+            return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * quickZ) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * quickZ) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), quickZ));
+        }
+
+        if (std::abs(myPos.z) < 0.005) {
+            myPos.z = 0.006;
+        }
+
+        return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * 100) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * 100) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), 100));
     }
 };
 
 
-std::array<float, 2> getGradiantsfloat(Position3D_float &pointA, Position3D_float &pointB, Position3D_float &pointC) {
+std::array<float, 2> getGradiantsfloat(Position3D_float const &pointA, Position3D_float const &pointB, Position3D_float const &pointC) {
     float diffX1 = pointB.myPos.x - pointA.myPos.x;
     float diffX2 = pointC.myPos.x - pointB.myPos.x;
     float diffY1 = pointB.myPos.y - pointA.myPos.y;
@@ -326,13 +799,13 @@ enum class LightTypes {
 
 class GlobalPolygon_float {
 private:
-    std::array<Point_float*, 3> definingGlobalPoints;
-    std::array<Position3D_float*, 3> definingLocalPoints;
+    std::array<Point_float*, 3> definingGlobalPoints = {nullptr, nullptr, nullptr};
+    std::array<Position3D_float*, 3> definingLocalPoints = {nullptr, nullptr, nullptr};
     SimpleColor originalColor;
     SimpleColor outlineColor;
     SimpleColor dislayedColor;
-    bool blockification;
-    float blockLOD;
+    bool blockification = true;
+    float blockLOD = 0.5f;
     bool shouldDraw;
     std::array<Vector3D_float, 2> lightingVectors = {Vector3D_float(simple3D_Pos_float()), Vector3D_float(simple3D_Pos_float())};
     Vector3D_float mainNormal = Vector3D_float(simple3D_Pos_float());
@@ -349,6 +822,7 @@ private:
 
     void prepresentAssets(screenAndCameraInfo &cameraInfo) {
         localMinsAmaxs = minsAndMaxs(cameraInfo);
+        localGradiant = getGradiantsfloat(definingLocalPoints[0][0], definingLocalPoints[1][0], definingLocalPoints[2][0]);
 
         localConvertedColor = dislayedColor.convertToBinary();
         localOutlineColor = outlineColor.convertToBinary();
@@ -363,7 +837,7 @@ private:
 
         if (blockification) {
             float sizer = (localMinsAmaxs[0] - localMinsAmaxs[2]) * (localMinsAmaxs[1] - localMinsAmaxs[3]) * 0.5;
-            float middleZ = (definingLocalPoints[0][0].myPos.z + definingLocalPoints[1][0].myPos.z + definingLocalPoints[2][0].myPos.z) * 0.334;
+            float middleZ = (1 / definingLocalPoints[0][0].myPos.z + 1 / definingLocalPoints[1][0].myPos.z + 1 / definingLocalPoints[2][0].myPos.z) * 0.334;
             localBlockification = int(blockLOD * sqrt(sizer) / middleZ);
         }
 
@@ -738,7 +1212,9 @@ public:
         }
     }
 
-    void thisChange(bool drawOut, screenAndCameraInfo &cameraInfo) {
+    void thisChange(std::array<Point_float*, 3> newdefiningGlobalPoints, std::array<Position3D_float*, 3> newdefiningLocalPoints, bool drawOut, screenAndCameraInfo &cameraInfo) {
+        definingGlobalPoints = newdefiningGlobalPoints;
+        definingLocalPoints = newdefiningLocalPoints;
         lightingVectors[0] = definingGlobalPoints[0][0].getPosRef().makeAVector(definingGlobalPoints[1][0].getPosRef());
         lightingVectors[1] = definingGlobalPoints[0][0].getPosRef().makeAVector(definingGlobalPoints[2][0].getPosRef());
         mainNormal = lightingVectors[0].crossProduct3D(lightingVectors[1]);
@@ -746,7 +1222,8 @@ public:
         prepresentAssets(cameraInfo);
     }
 
-    void playerChange(screenAndCameraInfo &cameraInfo, bool drawOut) {
+    void playerChange(std::array<Position3D_float*, 3> newdefiningLocalPoints, screenAndCameraInfo &cameraInfo, bool blockification, float blockDetail, bool drawOut) {
+        definingLocalPoints = newdefiningLocalPoints;
         shouldDraw = drawOut;
         prepresentAssets(cameraInfo);
     }
@@ -1096,9 +1573,12 @@ private:
     void retypePolygonsThis(playerFullInfo &myInfo, std::vector<GlobalPolygon_float> &globalPolygons, std::vector<LightSource> &allLights) {
         for (int i = 0; i < 8; i += 1) {
             Position3D_float oneLocalPoint = points[i].getRelativePos(myInfo.headingVector, myInfo.upVector, myInfo.rightVector, myInfo.originPoint);
-            float quickZ = 1.0f / pseudoPos[i].myPos.z;
-            if (std::abs(quickZ) <= 0.01) {
-                quickZ = 100;
+            float quickZ = 1.0f;
+            if (std::abs(oneLocalPoint.myPos.z) < 0.1) {
+                quickZ = 10;
+            }
+            else {
+                quickZ = 1.0f / oneLocalPoint.myPos.z;
             }
             pseudoPos[i] = oneLocalPoint.makeIntoScreensCord(myInfo.cameraInfo, quickZ);
         }
@@ -1107,11 +1587,12 @@ private:
         bool dontDrawOut = false;
 
         for (int i = 0; i < 36; i += 3) {
-            if (pseudoPos[links[i]].myPos.z < 0.1 && pseudoPos[links[i+1]].myPos.z < 0.1 && pseudoPos[links[i+2]].myPos.z < 0.1) {
+            if (pseudoPos[links[i]].myPos.z > 9 && pseudoPos[links[i+1]].myPos.z > 9 && pseudoPos[links[i+2]].myPos.z > 9) {
                 dontDrawOut = true;
             }
 
-            globalPolygons[indexNum].thisChange(dontDrawOut, myInfo.cameraInfo);
+            globalPolygons[indexNum].thisChange({&points[links[i]], &points[links[i+1]], &points[links[i+2]]},
+                {&pseudoPos[links[i]], &pseudoPos[links[i+1]], &pseudoPos[links[i+2]]}, dontDrawOut, myInfo.cameraInfo);
 
             globalPolygons[indexNum].rollBackColor();
 
@@ -1204,9 +1685,10 @@ public:
             this->pseudoPos[i] = Position3D_float(simple3D_Pos_float());
         }
 
-        for (int i = 0; i < 36; i += 3) {
-            globalPolygons.push_back(GlobalPolygon_float({&points[links[i]], &points[links[i+1]], &points[links[i+2]]}, {&pseudoPos[links[i]], &pseudoPos[links[i+1]], &pseudoPos[links[i+2]]}
-                ,objectColor, globalPolygonsPos, true, reactToLight));
+        for (int i = 0; i < 12; i += 1) {
+            globalPolygons.push_back(GlobalPolygon_float({&this->points[links[i]], &this->points[links[i+1]], &this->points[links[i+2]]},
+                {&pseudoPos[links[i]], &pseudoPos[links[i+1]], &pseudoPos[links[i+2]]},
+                objectColor, globalPolygonsPos, true, reactToLight));
             globalPolygonsPos += 1;
         }
         retypePolygonsThis(currentInfo, globalPolygons, allLights);
@@ -1216,9 +1698,12 @@ public:
     void retypePolygonsPlayer(playerFullInfo &myInfo, std::vector<GlobalPolygon_float> &globalPolygons) {
         for (int i = 0; i < 8; i += 1) {
             Position3D_float oneLocalPoint = points[i].getRelativePos(myInfo.headingVector, myInfo.upVector, myInfo.rightVector, myInfo.originPoint);
-            float quickZ = 1.0f / pseudoPos[i].myPos.z;
-            if (std::abs(quickZ) <= 0.01) {
-                quickZ = 100;
+            float quickZ = 1.0f;
+            if (std::abs(oneLocalPoint.myPos.z) < 0.1) {
+                quickZ = 10;
+            }
+            else {
+                quickZ = 1.0f / oneLocalPoint.myPos.z;
             }
             pseudoPos[i] = oneLocalPoint.makeIntoScreensCord(myInfo.cameraInfo, quickZ);
         }
@@ -1226,12 +1711,13 @@ public:
         int indexNum = firstPolygonNum;
 
         for (int i = 0; i < 36; i += 3) {
-            if (pseudoPos[links[i]].myPos.z < 0.1 && pseudoPos[links[i+1]].myPos.z < 0.1 && pseudoPos[links[i+2]].myPos.z < 0.1) {
+            if (pseudoPos[links[i]].myPos.z > 9 && pseudoPos[links[i+1]].myPos.z > 9 && pseudoPos[links[i+2]].myPos.z > 9) {
                 indexNum += 1;
                 continue;
             }
 
-            globalPolygons[indexNum].playerChange(myInfo.cameraInfo, true);
+            globalPolygons[indexNum].playerChange({&pseudoPos[links[i]], &pseudoPos[links[i+1]], &pseudoPos[links[i+2]]},
+                myInfo.cameraInfo, myInfoLOD.blockify , myInfoLOD.LODLevel, true);
             indexNum += 1;
 
         }
@@ -1331,14 +1817,12 @@ public:
 };
 
 
-void createCube(simple3D_Pos_float onePos, simple3D_Pos_float oneSize, SimpleColor objColor, SimpleColor outColor, bool stroked, std::vector<GlobalPolygon_float> &allPolygons, int &currentPolygon
-    ,std::vector<LightSource> &allLights,
+void createCube(simple3D_Pos_float onePos, simple3D_Pos_float oneSize, SimpleColor objColor, SimpleColor outColor, bool stroked, std::vector<GlobalPolygon_float> &allPolygons, int &currentPolygon, std::vector<LightSource> &allLights,
     std::vector<Cube3D_float*> &allObjects, playerFullInfo &currentPlayerInfo,
     float outlineSize = 10, bool colisions = false, bool visibility = false, bool blockify = true, float lodLevel = 0.1, bool lighted = false) {
 
     simple3D_Pos_float centre = simple3D_Pos_float(onePos.x + (oneSize.x/2), onePos.y + (oneSize.y/2), onePos.z + (oneSize.z/2));
-
-    Cube3D_float* oneCube = new Cube3D_float(8, 36, {
+    Cube3D_float *newCube = new Cube3D_float(8, 36, {
         Point_float(onePos.changedBy(0, 0, 0)),
         Point_float(onePos.changedBy(oneSize.x, 0, 0)),
         Point_float(onePos.changedBy(oneSize.x, oneSize.y, 0)),
@@ -1355,10 +1839,10 @@ void createCube(simple3D_Pos_float onePos, simple3D_Pos_float oneSize, SimpleCol
          1,2,3, 1,3,7,  // X=1
          0,1,7, 0,7,5,  // Y=0
          2,4,3, 2,6,4   // Y=1
-    },allPolygons, currentPolygon, allLights, currentPlayerInfo, oneSize, objColor, blockify,
-    lodLevel, outColor, stroked, outlineSize, visibility, colisions, lighted);
+    },allPolygons, currentPolygon, allLights, currentPlayerInfo,
+    oneSize, objColor, blockify, lodLevel, outColor, stroked, outlineSize, visibility, colisions, lighted);
 
-    allObjects.push_back(oneCube);
+    allObjects.push_back(newCube);
 }
 
 
@@ -1494,17 +1978,17 @@ public:
         linearColisionSetup();
         for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
             Cube3D_float* oneObject = globalInfo.objectList[i];
-            if (oneObject[0].visibility) {
-                oneObject[0].drawOutFastSDL2(myBasicInfo, sdlBuffer, zBuffer, globalInfo.polygonList);
+            if (oneObject->visibility) {
+                oneObject->drawOutFastSDL2(myBasicInfo, sdlBuffer, zBuffer, globalInfo.polygonList);
             }
-            if (oneObject[0].colision) {
-                if (oneObject[0].colide(nextPositionX, sizeBox, sizeRadius)) {
+            if (oneObject->colision) {
+                if (oneObject->colide(nextPositionX, sizeBox, sizeRadius)) {
                     colidingX = true;
                 }
-                if (oneObject[0].colide(nextPositionY, sizeBox, sizeRadius)) {
+                if (oneObject->colide(nextPositionY, sizeBox, sizeRadius)) {
                     colidingY = true;
                 }
-                if (oneObject[0].colide(nextPositionZ, sizeBox, sizeRadius)) {
+                if (oneObject->colide(nextPositionZ, sizeBox, sizeRadius)) {
                     colidingZ = true;
                 }
             }
@@ -1523,7 +2007,7 @@ public:
                 myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
                 for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
                     Cube3D_float* oneObject = globalInfo.objectList[i];
-                    oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                    oneObject->retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
                 }
             }
         }
@@ -1538,7 +2022,7 @@ public:
                 myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
                 for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
                     Cube3D_float* oneObject = globalInfo.objectList[i];
-                    oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                    oneObject->retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
                 }
             }
         }
@@ -1553,7 +2037,7 @@ public:
             myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
             for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
                 Cube3D_float* oneObject = globalInfo.objectList[i];
-                oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                oneObject->retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
             }
         }
         if (keysPressed.cameraRight) {
@@ -1567,7 +2051,7 @@ public:
             myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
             for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
                 Cube3D_float* oneObject = globalInfo.objectList[i];
-                oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                oneObject->retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
             }
         }
     }
@@ -1656,7 +2140,7 @@ public:
             myBasicInfo.changeInfo(headingVec, upVec, rightVec, myPos, myCameraInfo);
             for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
                 Cube3D_float* oneObject = globalInfo.objectList[i];
-                oneObject[0].retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
+                oneObject->retypePolygonsPlayer(myBasicInfo, globalInfo.polygonList);
             }
         }
 
@@ -1780,16 +2264,92 @@ struct VGATimings {
 
 
 enum class gameMode {
-    game3D = 1,
-    game2D = 2,
-    text = 3
+    game3d = 1,
+    text = 2
 };
 
 
-Player_float createBasicPlayer(int height, int width, bool blockify = true, float lodLevel = 0.5, int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
-    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
-    return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
-}
+struct OledDispley {
+    int sdlCLKPin = 2;
+    int sdlDataPin = 42;
+    int oledADDR = 0x3C;
+    int collums = 128;
+    int rows = 64;
+    int pages = 8;
+
+    void oledCommand(uint8_t cmd) {
+        Wire.beginTransmission(oledADDR);
+        Wire.write(0x00);
+        Wire.write(cmd);
+        Wire.endTransmission();
+    }
+
+    void initOLED_BareMetal() {
+        Wire.begin(sdlDataPin, sdlCLKPin, 400000); // Start I2C na 400kHz (rychlý režim)
+
+        oledCommand(0xAE); // Displej VYPNOUT
+        oledCommand(0xD5); oledCommand(0x80); // Nastavení frekvence oscilátoru
+        oledCommand(0xA8); oledCommand(0x3F); // Multiplex ratio (pro 64 řádků)
+        oledCommand(0xD3); oledCommand(0x00); // Display offset = 0
+        oledCommand(0x40); // Start line = 0
+        oledCommand(0x8D); oledCommand(0x14); // ZAPNUTÍ nábojové pumpy (nutné pro rozsvícení!)
+
+        // Klíčové: Nastavení adresovacího módu na "Horizontal Addressing Mode"
+        // To nám umožní jen sypat data a displej si sám zalomí řádky
+        oledCommand(0x20); oledCommand(0x00);
+
+        oledCommand(0xA1); // Segment remap (otočení obrazu)
+        oledCommand(0xC8); // COM scan direction (otočení obrazu)
+        oledCommand(0xDA); oledCommand(0x12); // COM piny
+        oledCommand(0x81); oledCommand(0xCF); // Kontrast (0x00 až 0xFF)
+        oledCommand(0xD9); oledCommand(0xF1); // Pre-charge period
+        oledCommand(0xDB); oledCommand(0x40); // VCOMH deselect level
+        oledCommand(0xA4); // Output ram to display
+        oledCommand(0xA6); // Normální displej (0xA7 by invertoval barvy)
+        oledCommand(0xAF); // Displej ZAPNOUT
+    }
+
+    void sendScreenData(uint8_t data) {
+        Wire.beginTransmission(oledADDR);
+        Wire.write(0x40);
+        Wire.write(data);
+        Wire.endTransmission();
+    }
+
+    void clearScreenOled(uint8_t clearedScreen) {
+        oledCommand(0x21); oledCommand(0); oledCommand(127);
+        oledCommand(0x22); oledCommand(0); oledCommand(7);
+        for (int page = 0; page < 8; page++) {
+            Wire.beginTransmission(oledADDR);
+            Wire.write(0x40);
+
+            for (int col = 0; col < 128; col++) {
+                Wire.write(clearedScreen);
+            }
+
+            Wire.endTransmission();
+        }
+    }
+
+    void colorPixel(int x, int y) {
+        if (x > collums) {
+            x = collums - 1;
+        }
+        if (y > rows) {
+            y = rows - 1;
+        }
+        if (x < 0) {
+            x = 0;
+        }
+        if (y < 0) {
+            y = 0;
+        }
+        oledCommand(0x21); oledCommand(x); oledCommand(127);
+        oledCommand(0x22); oledCommand((y>>3)); oledCommand(7);
+        uint8_t data = (1 << (y%8));
+        sendScreenData(data);
+    }
+};
 
 
 class gameInfo {
@@ -1802,23 +2362,23 @@ private:
     pressedKeys myKeys;
     gdma_channel_handle_t dma_chan;
     std::array<int, 8> pins;
-    uint8_t fillerHsync = 0b10000111;
-    uint8_t fillerZero = 0b11000111;
-    uint8_t vSyncfillerHsync = 0b00000111;
-    uint8_t vSyncfillerZero = 0b01000111;
+    uint8_t fillerHsync = 0b10000000;
+    uint8_t fillerZero = 0b11000000;
+    uint8_t vSyncfillerHsync = 0b00000000;
+    uint8_t vSyncfillerZero = 0b01000000;
     bool doubled;
 
     void prepareBlankLines() {
         for (int i = 0; i < 4; i += 1) {
-            memset(linesBuffer[i], 0b11000000, myVGA.totalWidths);
-            memset(linesBuffer[i], 0b10000000, myVGA.Hsync);
+            memset(linesBuffer[i], fillerZero, myVGA.totalWidths);
+            memset(linesBuffer[i], fillerHsync, myVGA.Hsync);
             Cache_WriteBack_Addr((uint32_t)linesBuffer[i], myVGA.totalWidths);
         }
-        memset(linesBuffer[4], 0b01000000, myVGA.totalWidths);
-        memset(linesBuffer[4], 0b00000000, myVGA.Hsync);
+        memset(linesBuffer[4], vSyncfillerZero, myVGA.totalWidths);
+        memset(linesBuffer[4], vSyncfillerHsync, myVGA.Hsync);
 
-        memset(linesBuffer[5], 0b11000000, myVGA.totalWidths);
-        memset(linesBuffer[5], 0b10000000, myVGA.Hsync);
+        memset(linesBuffer[5], fillerZero, myVGA.totalWidths);
+        memset(linesBuffer[5], fillerHsync, myVGA.Hsync);
         Cache_WriteBack_Addr((uint32_t)linesBuffer[4], myVGA.totalWidths);
         Cache_WriteBack_Addr((uint32_t)linesBuffer[5], myVGA.totalWidths);
     }
@@ -1846,6 +2406,11 @@ private:
         gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
     }
 
+    Player_float createBasicPlayer(int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
+    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
+        return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
+    }
+
 public:
 
     uint8_t renderDistance;
@@ -1865,20 +2430,21 @@ public:
     pressedKeys currentKeys;
     lldesc_t* dmaDesc;
     Player_float myPlayer;
-    gameMode currentMode;
+    gameMode mode;
+    OledDispley smallScreen;
 
-    gameInfo(Player_float player, int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18},
-        uint8_t renderDistance = 255, gameMode curentMode = gameMode::game3D, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = true, float lodLevel = 0.5) {
+    gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18}, gameMode currentMode = gameMode::game3d,
+        uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = false, float lodLevel = 0.5) {
         this->width = windowWidth;
         this->height = windowHeight;
         this->myVGA = VGATimings();
-        this->currentMode = curentMode;
         this->virLineCount = 0;
         this->activeDesc = 0;
         this->doubeling = false;
         this->pins = pins;
         this->currentKeys = pressedKeys();
         this->mySemaphore = xSemaphoreCreateBinary();
+        this->mode = currentMode;
 
         if (mySemaphore == NULL) {
             std::cout << "!!!!! Semaphore hasn`t been inicialized !!!!!!!" << std::endl;
@@ -1927,9 +2493,8 @@ public:
         this->blockify = blockify;
         this->activeStart = myVGA.VBack + myVGA.Vsync;
         this->activeEnd = activeStart + myVGA.screenHeight;
-        this->myPlayer = player;
+        this->myPlayer = createBasicPlayer();
         this->doubled = false;
-
     }
 
 
@@ -2019,7 +2584,7 @@ public:
         frontBuffer = tempBuffer;
     }
 
-    void drawPixel(int x, int y, uint8_t color) {
+    void drawPixelB(int x, int y, uint8_t color, bool smallDisplay = false) {
         if (x >= width) {
             x = width - 1;
         }
@@ -2033,21 +2598,24 @@ public:
             y = 0;
         }
         backBuffer[y * width + x] = color;
+        if (smallDisplay) {
+            smallScreen.colorPixel(x,y);
+        }
     }
 
 
-    void drawSymbols(const std::vector<const char*>& inputa, int x = 0, int y = 0, uint8_t color = 0b11111111) {
+    void drawSymbolsB(const char* const* inputa, int x = 0, int y = 0, uint8_t color = 0b11111111, bool smallDisplay = false) {
         // row = one string, multiple rows = list of strings
         // start = top corner
         // # = draw, anything else = no draw
         int curX = x;
         int curY = y;
-        for (int i = 0; i < inputa.size(); i += 1) {
+        for (int i = 0; i < basicAsciAlpbt::alphabetSizeStandarsY; i += 1) {
             const char* oneString = inputa[i];
             curX = x;
             for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
                 if (oneString[j] == '#') {
-                    drawPixel(curX, curY, color);
+                    drawPixelB(curX, curY, color, smallDisplay);
                 }
                 curX += 1;
             }
@@ -2056,27 +2624,32 @@ public:
     }
 
 
-    void writeOutText(const char* text, int posX = 0, int posY = 0, int charDistance = basicAsciAlpbt::alphabetSizeStandars + 2,
+    void writeOutTextB(const char* text, int posX = 0, int posY = 0, bool smallScreen = false, int charDistance = basicAsciAlpbt::alphabetSizeStandars + 2,
         int charDistanceY = basicAsciAlpbt::alphabetSizeStandarsY + 2, uint8_t color = 0b11111111) {
         int curX = posX;
         int curY = posY;
         while (text[0]) {
-            if (text[0] == '}') {
+            if (text[0] == '`') {
                 curY += charDistanceY;
                 curX = posX;
                 text += 1;
                 continue;
             }
 
-            const std::vector<const char*>& oneInput = *basicAsciAlpbt::getChar(text[0]);
-            drawSymbols(oneInput, curX, curY, color);
+            const char* const* oneInput = basicAsciAlpbt::getChar(text[0]);
+            drawSymbolsB(oneInput, curX, curY, color, smallScreen);
             curX += charDistance;
             text += 1;
         }
     }
 
 
-    void turnOnScreen() {
+    void clearScreenB() {
+        memset(backBuffer, backgroundColor, height * width);
+    }
+
+
+    void turnOnScreenB() {
         gdma_tx_event_callbacks_t myCallbacks = {
             .on_trans_eof = interuptGDMA_callback
         };
@@ -2084,16 +2657,11 @@ public:
     }
 
 
-    void turnOffScreen() {
+    void turnOffScreenB() {
         gdma_tx_event_callbacks_t myCallbacks = {
             .on_trans_eof = NULL
         };
         gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, NULL);
-    }
-
-
-    void clearScreen() {
-        memset(backBuffer, backgroundColor, height * width);
     }
 
     ~gameInfo() {
@@ -2125,13 +2693,18 @@ static void core1Task(void* parameters) {
     pinMode(36, INPUT_PULLDOWN);
     pinMode(35, INPUT_PULLDOWN);
     pinMode(37, INPUT_PULLDOWN);
-    Serial.printf("heap free: %d \n", heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-    Serial.printf("player ptr: %p \n", instance->myPlayer);
-    Serial.printf("game ptr: %p \n", instance);
-    //instance->currentMode = gameMode::text;
+    instance->smallScreen.initOLED_BareMetal();
+    instance->smallScreen.clearScreenOled(0);
+    instance->writeOutTextB("Ahoj svet", 15, 15, true);
     vTaskDelay(500);
     while (true) {
-        instance->drawScene();
+        if (instance->mode == gameMode::game3d) {
+            instance->drawScene();
+        }
+        if (instance->mode == gameMode::text) {
+            instance->clearScreenB();
+            instance->writeOutTextB("Brtaba OS", 150, 100);
+        }
         if (digitalRead(41) == HIGH) {
             instance->currentKeys.cameraRight = true;
         }
@@ -2177,27 +2750,27 @@ void createBasicCube(gameInfo &scene, Player_float &player, simple3D_Pos_float p
 
 
 void rotateBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, float angleXY = 0, float angleXZ = 0, float angleYZ = 0) {
-    scene.gameGlobals.objectList[cubeIndex][0].rotates(angleYZ, angleXZ, angleXY, player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex]->rotates(angleYZ, angleXZ, angleXY, player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void moveBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float difference = simple3D_Pos_float(0,0,0)) {
-    scene.gameGlobals.objectList[cubeIndex][0].changePos(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex]->changePos(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void setPosBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float newPosition = simple3D_Pos_float(0,0,0)) {
-    scene.gameGlobals.objectList[cubeIndex][0].setPos(newPosition,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex]->setPos(newPosition,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void changeSizeBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float difference = simple3D_Pos_float(0,0,0)) {
-    scene.gameGlobals.objectList[cubeIndex][0].changeSize(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex]->changeSize(difference,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
 void setSizeBasicCube(gameInfo &scene, int cubeIndex, Player_float &player, simple3D_Pos_float newSize = simple3D_Pos_float(1,1,1)) {
-    scene.gameGlobals.objectList[cubeIndex][0].setSize(newSize,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
+    scene.gameGlobals.objectList[cubeIndex]->setSize(newSize,player.myBasicInfo, scene.gameGlobals.polygonList, scene.gameGlobals.lightSourcesList);
 }
 
 
@@ -2227,22 +2800,20 @@ Player_float* myPlayer = nullptr;
 
 void setup() {
     Serial.begin(115200);
-    delay(1000);
+    delay(200);
     Serial.printf("Starting ...");
     Serial.printf("Total heap: %u bytes\n", ESP.getHeapSize());
     Serial.printf("Free heap: %u bytes\n", ESP.getFreeHeap());
     Serial.printf("Minimum free heap ever: %u bytes\n", ESP.getMinFreeHeap());
 
-    game = new gameInfo(createBasicPlayer(320, 240),320, 240);
-    for (int i = 0; i < 8; i += 1) {
-        createBasicCube(*game, game->myPlayer, simple3D_Pos_float(getRandomfloat(-10,20),getRandomfloat(-10,20),getRandomfloat(-10,20)),
+    game = new gameInfo(320, 240, {4,5,6,7,38,39,17,18}, gameMode::game3d);
+    for (int i = 0; i < 4; i += 1) {
+        createBasicCube(*game, game->myPlayer, simple3D_Pos_float(getRandomfloat(-10,10),getRandomfloat(-10,10),getRandomfloat(-10,10)),
             simple3D_Pos_float(getRandomfloat(1,5),getRandomfloat(1,5),getRandomfloat(1,5)),
-        SimpleColor(getRandomInt(0,255),getRandomInt(0,255),getRandomInt(0,255)), SimpleColor(0,0,0), true);
+            SimpleColor(getRandomInt(0,255),getRandomInt(0,255),getRandomInt(0,255)),
+            SimpleColor(0,0,0), true);
     }
-
     createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-1,-3,-3),simple3D_Pos_float(11,12,1), SimpleColor(0,100,0));
-    //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,-2,0));
-    //createBasicCube(*game, game->myPlayer, simple3D_Pos_float(0,0,-2));
     Serial.printf("Free heap after blocks: %u bytes\n", ESP.getFreeHeap());
 
     xTaskCreatePinnedToCore(
@@ -2252,7 +2823,7 @@ void setup() {
 
     xTaskCreatePinnedToCore(
         core1Task,
-        "renderer", 4096*4, game, 24, nullptr, 1
+        "renderer", 4096*4, game, 19, nullptr, 1
     );
 }
 
