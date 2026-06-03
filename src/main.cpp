@@ -2276,6 +2276,7 @@ struct OledDispley {
     int collums = 128;
     int rows = 64;
     int pages = 8;
+    uint8_t* myBuffer = (uint8_t*)heap_caps_malloc(1024 * sizeof(uint8_t), MALLOC_CAP_INTERNAL);
 
     void oledCommand(uint8_t cmd) {
         Wire.beginTransmission(oledADDR);
@@ -2431,7 +2432,6 @@ public:
     lldesc_t* dmaDesc;
     Player_float myPlayer;
     gameMode mode;
-    OledDispley smallScreen;
 
     gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18}, gameMode currentMode = gameMode::game3d,
         uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = false, float lodLevel = 0.5) {
@@ -2598,9 +2598,6 @@ public:
             y = 0;
         }
         backBuffer[y * width + x] = color;
-        if (smallDisplay) {
-            smallScreen.colorPixel(x,y);
-        }
     }
 
 
@@ -2610,16 +2607,24 @@ public:
         // # = draw, anything else = no draw
         int curX = x;
         int curY = y;
-        for (int i = 0; i < basicAsciAlpbt::alphabetSizeStandarsY; i += 1) {
-            const char* oneString = inputa[i];
-            curX = x;
-            for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
-                if (oneString[j] == '#') {
-                    drawPixelB(curX, curY, color, smallDisplay);
+        if (!smallDisplay) {
+            for (int i = 0; i < basicAsciAlpbt::alphabetSizeStandarsY; i += 1) {
+                const char* oneString = inputa[i];
+                curX = x;
+                for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
+                    if (oneString[j] == '#') {
+                        drawPixelB(curX, curY, color, smallDisplay);
+                    }
+                    curX += 1;
                 }
-                curX += 1;
+                curY += 1;
             }
-            curY += 1;
+        }
+
+        else {
+            for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
+
+            }
         }
     }
 
@@ -2689,13 +2694,9 @@ static void core1Task(void* parameters) {
     gpio_reset_pin(GPIO_NUM_40);
     gpio_reset_pin(GPIO_NUM_36);
     pinMode(41, INPUT_PULLDOWN);
-    pinMode(42, INPUT_PULLDOWN);
     pinMode(36, INPUT_PULLDOWN);
     pinMode(35, INPUT_PULLDOWN);
     pinMode(37, INPUT_PULLDOWN);
-    instance->smallScreen.initOLED_BareMetal();
-    instance->smallScreen.clearScreenOled(0);
-    instance->writeOutTextB("Ahoj svet", 15, 15, true);
     vTaskDelay(500);
     while (true) {
         if (instance->mode == gameMode::game3d) {
@@ -2710,12 +2711,6 @@ static void core1Task(void* parameters) {
         }
         if (digitalRead(41) == LOW) {
             instance->currentKeys.cameraRight = false;
-        }
-        if (digitalRead(42) == HIGH) {
-            instance->currentKeys.cameraLeft = true;
-        }
-        if (digitalRead(42) == LOW) {
-            instance->currentKeys.cameraLeft = false;
         }
         if (digitalRead(36) == HIGH) {
             instance->currentKeys.forward = true;
