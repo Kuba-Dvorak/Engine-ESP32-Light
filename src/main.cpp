@@ -2320,11 +2320,11 @@ struct OledDispley {
     void clearScreenOled(uint8_t clearedScreen) {
         oledCommand(0x21); oledCommand(0); oledCommand(127);
         oledCommand(0x22); oledCommand(0); oledCommand(7);
-        for (int page = 0; page < 8; page++) {
+        for (int page = 0; page < pages; page++) {
             Wire.beginTransmission(oledADDR);
             Wire.write(0x40);
 
-            for (int col = 0; col < 128; col++) {
+            for (int col = 0; col < collums; col++) {
                 Wire.write(clearedScreen);
             }
 
@@ -2334,21 +2334,39 @@ struct OledDispley {
 
     void colorPixel(int x, int y) {
         if (x > collums) {
-            x = collums - 1;
+            return;
         }
         if (y > rows) {
-            y = rows - 1;
+            return;
         }
         if (x < 0) {
-            x = 0;
+           return;
         }
         if (y < 0) {
-            y = 0;
+            return;
         }
+        myBuffer[x + (y / pages) * collums] |= (1 << (y%8));
         oledCommand(0x21); oledCommand(x); oledCommand(127);
         oledCommand(0x22); oledCommand((y>>3)); oledCommand(7);
-        uint8_t data = (1 << (y%8));
-        sendScreenData(data);
+    }
+
+    void sendBuffer() {
+        oledCommand(0x21); oledCommand(0); oledCommand(127);
+        oledCommand(0x22); oledCommand(0); oledCommand(7);
+        for (int page = 0; page < pages; page++) {
+            Wire.beginTransmission(oledADDR);
+            Wire.write(0x40);
+
+            for (int col = 0; col < collums; col++) {
+                Wire.write(myBuffer[col + (page / pages) * collums]);
+            }
+
+            Wire.endTransmission();
+        }
+    }
+
+    void clearBuffer(uint8_t clear) {
+        memset(myBuffer, clear, pages * collums);
     }
 };
 
@@ -2432,6 +2450,7 @@ public:
     lldesc_t* dmaDesc;
     Player_float myPlayer;
     gameMode mode;
+    OledDispley myDisplay;
 
     gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18}, gameMode currentMode = gameMode::game3d,
         uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = false, float lodLevel = 0.5) {
@@ -2598,6 +2617,9 @@ public:
             y = 0;
         }
         backBuffer[y * width + x] = color;
+        if (smallDisplay) {
+            myDisplay.colorPixel(x, y);
+        }
     }
 
 
@@ -2607,24 +2629,16 @@ public:
         // # = draw, anything else = no draw
         int curX = x;
         int curY = y;
-        if (!smallDisplay) {
-            for (int i = 0; i < basicAsciAlpbt::alphabetSizeStandarsY; i += 1) {
-                const char* oneString = inputa[i];
-                curX = x;
-                for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
-                    if (oneString[j] == '#') {
-                        drawPixelB(curX, curY, color, smallDisplay);
-                    }
-                    curX += 1;
-                }
-                curY += 1;
-            }
-        }
-
-        else {
+        for (int i = 0; i < basicAsciAlpbt::alphabetSizeStandarsY; i += 1) {
+            const char* oneString = inputa[i];
+            curX = x;
             for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
-
+                if (oneString[j] == '#') {
+                    drawPixelB(curX, curY, color, smallDisplay);
+                }
+                curX += 1;
             }
+            curY += 1;
         }
     }
 
@@ -2633,6 +2647,8 @@ public:
         int charDistanceY = basicAsciAlpbt::alphabetSizeStandarsY + 2, uint8_t color = 0b11111111) {
         int curX = posX;
         int curY = posY;
+        myDisplay.clearBuffer(0);
+        Serial.printf("ZAacate");
         while (text[0]) {
             if (text[0] == '`') {
                 curY += charDistanceY;
@@ -2645,6 +2661,10 @@ public:
             drawSymbolsB(oneInput, curX, curY, color, smallScreen);
             curX += charDistance;
             text += 1;
+        }
+        if (smallScreen) {
+            Serial.printf("Konec");
+            myDisplay.sendBuffer();
         }
     }
 
@@ -2697,6 +2717,9 @@ static void core1Task(void* parameters) {
     pinMode(36, INPUT_PULLDOWN);
     pinMode(35, INPUT_PULLDOWN);
     pinMode(37, INPUT_PULLDOWN);
+    instance->myDisplay.initOLED_BareMetal();
+    instance->writeOutTextB("Ahoj svete", 10, 10, true);
+    instance->writeOutTextB("Ahoj sveete", 10, 10, true);
     vTaskDelay(500);
     while (true) {
         if (instance->mode == gameMode::game3d) {
