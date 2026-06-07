@@ -32,423 +32,520 @@
 #include <Wire.h>
 
 
+enum class picture {
+    setting = 1,
+    led = 2,
+    motor = 3,
+    audio = 4,
+    text = 5,
+    game3d = 6,
+    IR_control = 7
+};
+
+// namespace was generated from AI, from normal text chars, and my pictures
 namespace basicAsciAlpbt {
-    const int alphabetSizeStandars = 5;
+    const int alphabetSizeStandars = 8;
     const int alphabetSizeStandarsY = 7;
 
-    const char* const charA[] = {
-        ".###.",
-        "#...#",
-        "#...#",
-        "#####",
-        "#...#",
-        "#...#",
-        "#...#"
+    const int bitmapWidth = 64;
+    const int bitmapHeight = 32;
+    const int bitmapPages = bitmapHeight / 8;
+
+
+    const uint8_t charA[] = {
+        0x1C,
+        0x22,
+        0x22,
+        0x3E,
+        0x22,
+        0x22,
+        0x22,
     };
 
-    const char* const charB[] = {
-        "####.",
-        "#...#",
-        "#...#",
-        "####.",
-        "#...#",
-        "#...#",
-        "####."
+
+
+    const uint8_t charB[] = {
+        0x1E,
+        0x22,
+        0x22,
+        0x1E,
+        0x22,
+        0x22,
+        0x1E,
     };
 
-    const char* const charC[] = {
-        ".####",
-        "#....",
-        "#....",
-        "#....",
-        "#....",
-        "#....",
-        ".####"
+
+
+    const uint8_t charC[] = {
+        0x3C,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x3C,
     };
 
-    const char* const charD[] = {
-        "####.",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        "####."
+
+
+    const uint8_t charD[] = {
+        0x1E,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x1E,
     };
 
-    const char* const charE[] = {
-        "#####",
-        "#....",
-        "#....",
-        "####.",
-        "#....",
-        "#....",
-        "#####"
+
+
+    const uint8_t charE[] = {
+        0x3E,
+        0x02,
+        0x02,
+        0x1E,
+        0x02,
+        0x02,
+        0x3E,
     };
 
-    const char* const charF[] = {
-        "#####",
-        "#....",
-        "#....",
-        "####.",
-        "#....",
-        "#....",
-        "#...."
+
+
+    const uint8_t charF[] = {
+        0x3E,
+        0x02,
+        0x02,
+        0x1E,
+        0x02,
+        0x02,
+        0x02,
     };
 
-    const char* const charG[] = {
-        ".####",
-        "#....",
-        "#....",
-        "#..##",
-        "#...#",
-        "#...#",
-        ".####"
+
+
+    const uint8_t charG[] = {
+        0x3C,
+        0x02,
+        0x02,
+        0x32,
+        0x22,
+        0x22,
+        0x3C,
     };
 
-    const char* const charH[] = {
-        "#...#",
-        "#...#",
-        "#...#",
-        "#####",
-        "#...#",
-        "#...#",
-        "#...#"
+
+
+    const uint8_t charH[] = {
+        0x22,
+        0x22,
+        0x22,
+        0x3E,
+        0x22,
+        0x22,
+        0x22,
     };
 
-    const char* const charI[] = {
-        "#####",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#..",
-        "#####"
+
+
+    const uint8_t charI[] = {
+        0x3E,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x3E,
     };
 
-    const char* const charJ[] = {
-        "#####",
-        "...#.",
-        "...#.",
-        "...#.",
-        "...#.",
-        "#..#.",
-        ".##.."
+
+
+    const uint8_t charJ[] = {
+        0x3E,
+        0x10,
+        0x10,
+        0x10,
+        0x10,
+        0x12,
+        0x0C,
     };
 
-    const char* const charK[] = {
-        "#...#",
-        "#..#.",
-        "#.#..",
-        "##...",
-        "#.#..",
-        "#..#.",
-        "#...#"
+
+
+    const uint8_t charK[] = {
+        0x22,
+        0x12,
+        0x0A,
+        0x06,
+        0x0A,
+        0x12,
+        0x22,
     };
 
-    const char* const charL[] = {
-        "#....",
-        "#....",
-        "#....",
-        "#....",
-        "#....",
-        "#....",
-        "#####"
+
+
+    const uint8_t charL[] = {
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x02,
+        0x3E,
     };
 
-    const char* const charM[] = {
-        "#...#",
-        "##.##",
-        "#.#.#",
-        "#.#.#",
-        "#...#",
-        "#...#",
-        "#...#"
+
+
+    const uint8_t charM[] = {
+        0x22,
+        0x36,
+        0x2A,
+        0x2A,
+        0x22,
+        0x22,
+        0x22,
     };
 
-    const char* const charN[] = {
-        "#...#",
-        "##..#",
-        "#.#.#",
-        "#..##",
-        "#...#",
-        "#...#",
-        "#...#"
+
+
+    const uint8_t charN[] = {
+        0x22,
+        0x26,
+        0x2A,
+        0x32,
+        0x22,
+        0x22,
+        0x22,
     };
 
-    const char* const charO[] = {
-        ".###.",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        ".###."
+
+
+    const uint8_t charO[] = {
+        0x1C,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x1C,
     };
 
-    const char* const charP[] = {
-        "####.",
-        "#...#",
-        "#...#",
-        "####.",
-        "#....",
-        "#....",
-        "#...."
+
+
+    const uint8_t charP[] = {
+        0x1E,
+        0x22,
+        0x22,
+        0x1E,
+        0x02,
+        0x02,
+        0x02,
     };
 
-    const char* const charQ[] = {
-        ".###.",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#.#.#",
-        "#..##",
-        ".####"
+
+
+    const uint8_t charQ[] = {
+        0x1C,
+        0x22,
+        0x22,
+        0x22,
+        0x2A,
+        0x32,
+        0x3C,
     };
 
-    const char* const charR[] = {
-        "####.",
-        "#...#",
-        "#...#",
-        "####.",
-        "#.#..",
-        "#..#.",
-        "#...#"
+
+
+    const uint8_t charR[] = {
+        0x1E,
+        0x22,
+        0x22,
+        0x1E,
+        0x0A,
+        0x12,
+        0x22,
     };
 
-    const char* const charS[] = {
-        ".####",
-        "#....",
-        "#....",
-        ".###.",
-        "....#",
-        "....#",
-        "####."
+
+
+    const uint8_t charS[] = {
+        0x3C,
+        0x02,
+        0x02,
+        0x1C,
+        0x20,
+        0x20,
+        0x1E,
     };
 
-    const char* const charT[] = {
-        "#####",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#.."
+
+
+    const uint8_t charT[] = {
+        0x3E,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
     };
 
-    const char* const charU[] = {
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        ".###."
+
+
+    const uint8_t charU[] = {
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x1C,
     };
 
-    const char* const charV[] = {
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        "#...#",
-        ".#.#.",
-        "..#.."
+
+
+    const uint8_t charV[] = {
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x22,
+        0x14,
+        0x08,
     };
 
-    const char* const charW[] = {
-        "#...#",
-        "#...#",
-        "#...#",
-        "#.#.#",
-        "#.#.#",
-        "##.##",
-        "#...#"
+
+
+    const uint8_t charW[] = {
+        0x22,
+        0x22,
+        0x22,
+        0x2A,
+        0x2A,
+        0x36,
+        0x22,
     };
 
-    const char* const charX[] = {
-        "#...#",
-        "#...#",
-        ".#.#.",
-        "..#..",
-        ".#.#.",
-        "#...#",
-        "#...#"
+
+
+    const uint8_t charX[] = {
+        0x22,
+        0x22,
+        0x14,
+        0x08,
+        0x14,
+        0x22,
+        0x22,
     };
 
-    const char* const charY[] = {
-        "#...#",
-        "#...#",
-        ".#.#.",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#.."
+
+
+    const uint8_t charY[] = {
+        0x22,
+        0x22,
+        0x14,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
     };
 
-    const char* const charZ[] = {
-        "#####",
-        "....#",
-        "...#.",
-        "..#..",
-        ".#...",
-        "#....",
-        "#####"
+
+
+    const uint8_t charZ[] = {
+        0x3E,
+        0x20,
+        0x10,
+        0x08,
+        0x04,
+        0x02,
+        0x3E,
     };
+
+
 
     // Číslice
-    const char* const char0[] = {
-        ".###.",
-        "#...#",
-        "#..##",
-        "#.#.#",
-        "##..#",
-        "#...#",
-        ".###."
+    const uint8_t char0[] = {
+        0x1C,
+        0x22,
+        0x32,
+        0x2A,
+        0x26,
+        0x22,
+        0x1C,
     };
 
-    const char* const char1[] = {
-        "..#..",
-        ".##..",
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#..",
-        "#####"
+
+
+    const uint8_t char1[] = {
+        0x08,
+        0x0C,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x3E,
     };
 
-    const char* const char2[] = {
-        ".###.",
-        "#...#",
-        "....#",
-        "..##.",
-        ".#...",
-        "#....",
-        "#####"
+
+
+    const uint8_t char2[] = {
+        0x1C,
+        0x22,
+        0x20,
+        0x18,
+        0x04,
+        0x02,
+        0x3E,
     };
 
-    const char* const char3[] = {
-        "#####",
-        "....#",
-        "...#.",
-        "..##.",
-        "....#",
-        "#...#",
-        ".###."
+
+
+    const uint8_t char3[] = {
+        0x3E,
+        0x20,
+        0x10,
+        0x18,
+        0x20,
+        0x22,
+        0x1C,
     };
 
-    const char* const char4[] = {
-        "#...#",
-        "#...#",
-        "#...#",
-        "#####",
-        "....#",
-        "....#",
-        "....#"
+
+
+    const uint8_t char4[] = {
+        0x22,
+        0x22,
+        0x22,
+        0x3E,
+        0x20,
+        0x20,
+        0x20,
     };
 
-    const char* const char5[] = {
-        "#####",
-        "#....",
-        "#....",
-        "####.",
-        "....#",
-        "....#",
-        "####."
+
+
+    const uint8_t char5[] = {
+        0x3E,
+        0x02,
+        0x02,
+        0x1E,
+        0x20,
+        0x20,
+        0x1E,
     };
 
-    const char* const char6[] = {
-        ".####",
-        "#....",
-        "#....",
-        "####.",
-        "#...#",
-        "#...#",
-        ".###."
+
+
+    const uint8_t char6[] = {
+        0x3C,
+        0x02,
+        0x02,
+        0x1E,
+        0x22,
+        0x22,
+        0x1C,
     };
 
-    const char* const char7[] = {
-        "#####",
-        "....#",
-        "...#.",
-        "..#..",
-        ".#...",
-        ".#...",
-        ".#..."
+
+
+    const uint8_t char7[] = {
+        0x3E,
+        0x20,
+        0x10,
+        0x08,
+        0x04,
+        0x04,
+        0x04,
     };
 
-    const char* const char8[] = {
-        ".###.",
-        "#...#",
-        "#...#",
-        ".###.",
-        "#...#",
-        "#...#",
-        ".###."
+
+
+    const uint8_t char8[] = {
+        0x1C,
+        0x22,
+        0x22,
+        0x1C,
+        0x22,
+        0x22,
+        0x1C,
     };
 
-    const char* const char9[] = {
-        ".###.",
-        "#...#",
-        "#...#",
-        ".####",
-        "....#",
-        "....#",
-        "####."
+
+
+    const uint8_t char9[] = {
+        0x1C,
+        0x22,
+        0x22,
+        0x3C,
+        0x20,
+        0x20,
+        0x1E,
     };
 
-    // Základní interpunkce
-    const char* const charSpace[] = {
-        ".....",
-        ".....",
-        ".....",
-        ".....",
-        ".....",
-        ".....",
-        "....."
+
+
+    const uint8_t charSpace[] = {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
     };
 
-    const char* const charDot[] = {
-        ".....",
-        ".....",
-        ".....",
-        ".....",
-        ".....",
-        ".##..",
-        ".##.."
+
+
+    const uint8_t charDot[] = {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x0C,
+        0x0C,
     };
 
-    const char* const charExcl[] = {
-        "..#..",
-        "..#..",
-        "..#..",
-        "..#..",
-        ".....",
-        ".##..",
-        ".##.."
+
+
+    const uint8_t charExcl[] = {
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x00,
+        0x0C,
+        0x0C,
     };
 
-    const char* const charColon[] = {
-        ".....",
-        ".##..",
-        ".##..",
-        ".....",
-        ".##..",
-        ".##..",
-        "....."
+
+
+    const uint8_t charColon[] = {
+        0x00,
+        0x0C,
+        0x0C,
+        0x00,
+        0x0C,
+        0x0C,
+        0x00,
     };
 
-    const char* const charMinus[] = {
-        ".....",
-        ".....",
-        ".....",
-        "#####",
-        ".....",
-        ".....",
-        "....."
+
+
+    const uint8_t charMinus[] = {
+        0x00,
+        0x00,
+        0x00,
+        0x3E,
+        0x00,
+        0x00,
+        0x00,
     };
 
-    inline const char* const* getChar(char c) {
+
+
+    inline const uint8_t* getChar(char c) {
         switch (c) {
             case 'A': case 'a': return charA;
             case 'B': case 'b': return charB;
@@ -494,24 +591,166 @@ namespace basicAsciAlpbt {
             default:  return charSpace;
         }
     }
+
+    const uint8_t IR_symbolBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0xFF, 0xFF, 0x07,
+        0xF8, 0xFF, 0xFF, 0x07, 0xF8, 0xFF, 0xFF, 0x07, 0xF8, 0xFF, 0xFF, 0x07, 0xF8, 0xFF, 0xFF, 0x07,
+        0xF8, 0xFF, 0xFF, 0x07, 0xF8, 0xFF, 0xFF, 0x07, 0x00, 0x1E, 0x38, 0x00, 0x00, 0x1E, 0x38, 0x00,
+        0x00, 0x3E, 0x3C, 0x00, 0x00, 0xFC, 0x1F, 0x00, 0x00, 0xF8, 0x0F, 0x00, 0x00, 0xF0, 0x07, 0x00,
+        0x00, 0x00, 0x00, 0x04, 0x40, 0x00, 0x00, 0x02, 0xC0, 0x00, 0x00, 0x02, 0x80, 0x00, 0x00, 0x01,
+        0x00, 0x03, 0xC0, 0x00, 0x00, 0x3C, 0x70, 0x0C, 0x00, 0xE0, 0x1F, 0x04, 0x20, 0x00, 0x00, 0x02,
+        0xC0, 0x00, 0x80, 0x01, 0x00, 0x01, 0xC0, 0x00, 0x00, 0x06, 0x30, 0x00, 0x00, 0xF8, 0x0F, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x0C, 0x20, 0x00, 0x00, 0x04,
+        0x40, 0x00, 0x00, 0x03, 0x80, 0x01, 0xE0, 0x00, 0x00, 0xFE, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x30, 0x00, 0x00, 0x18, 0x40, 0x00, 0x00, 0x04,
+        0x80, 0x01, 0x80, 0x03, 0x00, 0x1F, 0x70, 0x00, 0x00, 0xE0, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    const uint8_t audioBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x01, 0x00, 0x00, 0xC0, 0x07,
+        0x00, 0x00, 0xE0, 0x0F, 0x00, 0x00, 0xE0, 0x1F, 0x00, 0x00, 0xE0, 0x1F, 0x00, 0x00, 0xF0, 0x1F,
+        0x00, 0x00, 0xF0, 0x1F, 0x00, 0x00, 0xE0, 0x1F, 0x00, 0x00, 0xE0, 0x1F, 0x00, 0x00, 0xE0, 0x1F,
+        0x00, 0x00, 0xE0, 0x1F, 0xF8, 0xFF, 0xFF, 0x0F, 0xF8, 0xFF, 0xFF, 0x0F, 0xE0, 0x00, 0xFC, 0x0F,
+        0xE0, 0x00, 0x00, 0x03, 0xE0, 0x01, 0x00, 0x00, 0xC0, 0x01, 0x00, 0x00, 0xC0, 0x01, 0x00, 0x00,
+        0xC0, 0x01, 0x00, 0x00, 0xC0, 0x01, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00,
+        0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    const uint8_t gerBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x07, 0x00,
+        0x00, 0xF0, 0x0F, 0x00, 0x00, 0xF0, 0x0F, 0x00, 0x00, 0xF8, 0x1F, 0x00, 0x70, 0xF8, 0x1F, 0x00,
+        0xF8, 0xF0, 0x1F, 0x00, 0xF8, 0xF7, 0x3F, 0x0F, 0xFC, 0xFF, 0xFF, 0x0F, 0xFC, 0xFF, 0xFF, 0x1F,
+        0xF8, 0xFF, 0xFF, 0x3F, 0xF8, 0x0F, 0xF8, 0x3F, 0xF0, 0x07, 0xF0, 0x3F, 0xC0, 0x03, 0xE0, 0x1F,
+        0xF0, 0x01, 0xE0, 0x0F, 0xFE, 0x01, 0xC0, 0x07, 0xFE, 0x01, 0xC0, 0x01, 0xFE, 0x01, 0xC0, 0x01,
+        0xFE, 0x01, 0xC0, 0x07, 0xFC, 0x01, 0xC0, 0x0F, 0xFC, 0x01, 0xC0, 0x1F, 0xE0, 0x03, 0xE0, 0x1F,
+        0xE0, 0x03, 0xE0, 0x1F, 0xF0, 0x07, 0xF0, 0x0F, 0xF0, 0x0F, 0xFC, 0x0F, 0xF8, 0xFF, 0xFF, 0x0F,
+        0xF8, 0xFF, 0x8F, 0x0F, 0xF0, 0xFF, 0x0F, 0x00, 0xE0, 0xF8, 0x0F, 0x00, 0x40, 0xF0, 0x0F, 0x00,
+        0x00, 0xF0, 0x07, 0x00, 0x00, 0xE0, 0x03, 0x00, 0x00, 0xC0, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    const uint8_t ledBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFE, 0x1F, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0xE2, 0x13, 0x00, 0x00, 0x02, 0x12, 0x00, 0x00, 0x02, 0x12, 0x00,
+        0x00, 0x02, 0x12, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0xE2, 0x13, 0x00, 0x00, 0xA2, 0x12, 0x00, 0x00, 0xA2, 0x12, 0x00, 0x00, 0xA2, 0x12, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0xE2, 0x13, 0x00,
+        0x00, 0x22, 0x12, 0x00, 0x00, 0x22, 0x12, 0x00, 0x00, 0x62, 0x13, 0x00, 0x00, 0x82, 0x11, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x82, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x82, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0x02, 0x10, 0x00, 0x00, 0x82, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00, 0x00, 0x02, 0x10, 0x00,
+        0x00, 0xFE, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    const uint8_t monitor_3DBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0xFF, 0xFF, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0xF0, 0x3F, 0x01, 0x20, 0x18, 0x20, 0x41,
+        0x20, 0x18, 0x20, 0x41, 0x20, 0x18, 0x20, 0x41, 0x20, 0x14, 0x20, 0x41, 0x20, 0x14, 0x20, 0x41,
+        0x20, 0x14, 0x20, 0x7F, 0x20, 0x16, 0x20, 0x7F, 0x20, 0xF2, 0x3F, 0x7F, 0x20, 0x12, 0x10, 0x7F,
+        0x20, 0x12, 0x10, 0x41, 0x20, 0x16, 0x08, 0x41, 0x20, 0x1C, 0x08, 0x41, 0x20, 0xFC, 0x0F, 0x41,
+        0x20, 0x00, 0x0C, 0x41, 0x20, 0x00, 0x00, 0x41, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0xE0, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    const uint8_t monitor_textBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0xFF, 0xFF, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x02, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01, 0x20, 0xFE, 0x0F, 0x01,
+        0x20, 0x02, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0xFE, 0x0F, 0x41,
+        0x20, 0x42, 0x08, 0x41, 0x20, 0x42, 0x08, 0x41, 0x20, 0x42, 0x08, 0x41, 0x20, 0x42, 0x08, 0x41,
+        0x20, 0x42, 0x08, 0x7F, 0x20, 0x42, 0x08, 0x7F, 0x20, 0x00, 0x00, 0x7F, 0x20, 0x00, 0x00, 0x7F,
+        0x20, 0x00, 0x00, 0x41, 0x20, 0x02, 0x08, 0x41, 0x20, 0x06, 0x0C, 0x41, 0x20, 0x38, 0x03, 0x41,
+        0x20, 0xC0, 0x00, 0x41, 0x20, 0x60, 0x07, 0x41, 0x20, 0x1C, 0x08, 0x01, 0x20, 0x06, 0x00, 0x01,
+        0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01,
+        0x20, 0x02, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01, 0x20, 0xFE, 0x0F, 0x01, 0x20, 0x02, 0x00, 0x01,
+        0x20, 0x02, 0x00, 0x01, 0x20, 0x02, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01, 0x20, 0x00, 0x00, 0x01,
+        0xE0, 0xFF, 0xFF, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    const uint8_t motorBitmap[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x07, 0x00,
+        0x00, 0xF0, 0x07, 0x00, 0x00, 0xF0, 0x07, 0x00, 0x00, 0xF0, 0x07, 0x00, 0x00, 0xF0, 0x07, 0x00,
+        0x00, 0xF0, 0x07, 0x00, 0x00, 0xF0, 0x07, 0x00, 0x00, 0xF0, 0x07, 0x00, 0x00, 0xF0, 0x07, 0x00,
+        0x00, 0xF0, 0x07, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00,
+        0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0xFF, 0xFF, 0x00,
+        0x00, 0xC0, 0x01, 0x00, 0x00, 0xC0, 0x01, 0x00, 0x00, 0xC0, 0x01, 0x00, 0x00, 0xC0, 0x21, 0x00,
+        0x00, 0xC0, 0x11, 0x00, 0x00, 0xDC, 0x0D, 0x00, 0x00, 0xC3, 0x7D, 0x00, 0x80, 0xC0, 0x8D, 0x00,
+        0x40, 0x00, 0x98, 0x00, 0x40, 0x00, 0x30, 0x01, 0x40, 0x00, 0x20, 0x01, 0x80, 0x00, 0x00, 0x01,
+        0x80, 0x00, 0x00, 0x01, 0x00, 0x01, 0x80, 0x00, 0x00, 0x01, 0x80, 0x00, 0x00, 0x07, 0xE0, 0x00,
+        0x00, 0xF8, 0x3F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+
+    inline const uint8_t* getSymbol(picture picture) {
+        switch (picture) {
+            case picture::setting: return gerBitmap;
+            case picture::led: return ledBitmap;
+            case picture::motor: return motorBitmap;
+            case picture::audio: return audioBitmap;
+            case picture::text: return monitor_textBitmap;
+            case picture::game3d: return monitor_3DBitmap;
+            case picture::IR_control: return IR_symbolBitmap;
+            default: return nullptr;
+        }
+    }
 }
 
 
 //fully operational 3D raycasting engine
 
 float getRandomfloat(int min, int max) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-    float returnableValue = float((dis(gen)*(max-min+1))+min);
+    uint32_t randomes = esp_random();
+    float returnableValue = float((((float)randomes / 4294967295.0f) * (max - min + 1)) + min);
     return returnableValue;
 }
 
 int getRandomInt(int min, int max) {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-    int returnableValue = int((dis(gen)*(max-min+1))+min);
+    uint32_t randomes = esp_random();
+    int returnableValue = int((((float)randomes / 4294967295.0f) * (max - min + 1)) + min);
     return returnableValue;
 }
 
@@ -674,15 +913,10 @@ public:
     }
 
     Position3D_float makeIntoScreensCord(screenAndCameraInfo const &impInfo, float quickZ) {
-        if (myPos.z > 0.01) {
+        if (quickZ > 0.01) {
             return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * quickZ) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * quickZ) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), quickZ));
         }
-
-        if (std::abs(myPos.z) < 0.005) {
-            myPos.z = 0.006;
-        }
-
-        return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * 100) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * 100) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), 100));
+        return Position3D_float(simple3D_Pos_float(std::round(((myPos.x * 100) * impInfo.numberAmpX) + (impInfo.screenWidth * 0.5f)), std::round(((myPos.y * 100) * impInfo.numberAmpY) + (impInfo.screenHeight * 0.5f)), -100));
     }
 };
 
@@ -1212,6 +1446,119 @@ public:
         }
     }
 
+    void drawOutPolygonSmallDisplay(uint8_t* zBufferImp, uint8_t* colorsBuffer, screenAndCameraInfo const &cameraInfo) {
+        if (localxMajority) {
+            bool leftRight = false;
+            int minX = 0;
+            int maxX = 0;
+            if (definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[0] * (localMinsAmaxs[3] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y)) > definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[2] * (localMinsAmaxs[3] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y))) {
+                leftRight = true;
+            }
+
+            for (int yPos = localMinsAmaxs[3]; yPos < localMinsAmaxs[1]+1; yPos += 4) {
+                int xPos2 = int(definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[0] * (yPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y)));
+                int xPos1 = 0;
+                if (yPos >= definingLocalPoints[localIndexesNumbers[2]][0].myPos.y) {
+                    xPos1 = int(definingLocalPoints[localIndexesNumbers[0]][0].myPos.x + (localKoeficients[2] * (yPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.y)));
+                }
+
+                else {
+                    xPos1 = int(definingLocalPoints[localIndexesNumbers[2]][0].myPos.x + (localKoeficients[1] * (yPos - definingLocalPoints[localIndexesNumbers[2]][0].myPos.y)));
+                }
+
+                if (leftRight) {
+                    minX = xPos1;
+                    maxX = xPos2;
+                }
+                else {
+                    minX = xPos2;
+                    maxX = xPos1;
+                }
+
+                if (minX <= 0) {
+                    minX = 0;
+                }
+
+                if (maxX >= cameraInfo.screenWidth) {
+                    maxX = cameraInfo.screenWidth-1;
+                }
+
+                if (minX >= cameraInfo.screenWidth) {
+                    minX = cameraInfo.screenWidth-1;
+                }
+
+                if (maxX <= 0) {
+                    maxX = 0;
+                }
+
+                for (int xPos = minX; xPos < maxX+1; xPos += 3) {
+                    uint8_t globalZ = uint8_t(1.0f / (definingLocalPoints[0][0].myPos.z + (xPos - definingLocalPoints[0][0].myPos.x) * localGradiant[0] + (yPos - definingLocalPoints[0][0].myPos.y) * localGradiant[1]));
+                    if (globalZ < zBufferImp[xPos + (yPos * cameraInfo.screenWidth)] && globalZ > 0) {
+                        colorsBuffer[xPos + (yPos * cameraInfo.screenWidth)] |= yPos % 8;
+                        zBufferImp[xPos + (yPos * cameraInfo.screenWidth)] = globalZ;
+                    }
+                }
+            }
+        }
+
+        else {
+            bool leftRight = false;
+            int minY = 0;
+            int maxY = 0;
+
+            if (definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[2] * (localMinsAmaxs[2] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x)) < definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[0] * (localMinsAmaxs[2] - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x))) {
+                leftRight = true;
+            }
+
+            for (int xPos = localMinsAmaxs[2]; xPos < localMinsAmaxs[0]+1; xPos += 3) {
+
+                int yPos2 = std::round(definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[0] * (xPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x)));
+                int yPos1 = 0;
+
+                if (xPos >= definingLocalPoints[localIndexesNumbers[2]][0].myPos.x) {
+                    yPos1 = std::round(definingLocalPoints[localIndexesNumbers[0]][0].myPos.y + (localKoeficients[2] * (xPos - definingLocalPoints[localIndexesNumbers[0]][0].myPos.x)));
+                }
+
+                else {
+                    yPos1 = std::round(definingLocalPoints[localIndexesNumbers[2]][0].myPos.y + (localKoeficients[1] * (xPos - definingLocalPoints[localIndexesNumbers[2]][0].myPos.x)));
+                }
+
+                if (leftRight) {
+                    minY = yPos1;
+                    maxY = yPos2;
+                }
+                else {
+                    minY = yPos2;
+                    maxY = yPos1;
+                }
+
+                if (minY <= 0) {
+                    minY = 0;
+                }
+
+                if (maxY >= cameraInfo.screenHeight) {
+                    maxY = cameraInfo.screenHeight-1;
+                }
+
+                if (minY >= cameraInfo.screenHeight) {
+                    minY = cameraInfo.screenHeight-1;
+                }
+
+                if (maxY <= 0) {
+                    maxY = 0;
+                }
+
+                for (int yPos = minY; yPos < maxY+1; yPos += 4) {
+                    uint8_t globalZ = uint8_t(1.0f / (definingLocalPoints[0][0].myPos.z + (xPos - definingLocalPoints[0][0].myPos.x) * localGradiant[0] + (yPos - definingLocalPoints[0][0].myPos.y) * localGradiant[1]));
+                    if (globalZ < zBufferImp[xPos + (yPos * cameraInfo.screenWidth)] && globalZ > 0) {
+                        colorsBuffer[xPos + (yPos * cameraInfo.screenWidth)] |= yPos % 8;
+                        zBufferImp[xPos + (yPos * cameraInfo.screenWidth)] = globalZ;
+                    }
+                }
+            }
+        }
+    }
+
     void thisChange(std::array<Point_float*, 3> newdefiningGlobalPoints, std::array<Position3D_float*, 3> newdefiningLocalPoints, bool drawOut, screenAndCameraInfo &cameraInfo) {
         definingGlobalPoints = newdefiningGlobalPoints;
         definingLocalPoints = newdefiningLocalPoints;
@@ -1226,30 +1573,6 @@ public:
         definingLocalPoints = newdefiningLocalPoints;
         shouldDraw = drawOut;
         prepresentAssets(cameraInfo);
-    }
-
-    void changeOriginalColor(SimpleColor newColor) {
-        if (newColor.red >= 255) {
-            newColor.red = 255;
-        }
-        if (newColor.red <= 0) {
-            newColor.red = 0;
-        }
-
-        if (newColor.green >= 255) {
-            newColor.green = 255;
-        }
-        if (newColor.green <= 0) {
-            newColor.green = 0;
-        }
-
-        if (newColor.blue >= 255) {
-            newColor.blue = 255;
-        }
-        if (newColor.blue <= 0) {
-            newColor.blue = 0;
-        }
-        originalColor = newColor;
     }
 
     void rollBackColor() {
@@ -1587,7 +1910,7 @@ private:
         bool dontDrawOut = false;
 
         for (int i = 0; i < 36; i += 3) {
-            if (pseudoPos[links[i]].myPos.z > 9 && pseudoPos[links[i+1]].myPos.z > 9 && pseudoPos[links[i+2]].myPos.z > 9) {
+            if (pseudoPos[links[i]].myPos.z > 5 && pseudoPos[links[i+1]].myPos.z > 5 && pseudoPos[links[i+2]].myPos.z > 5) {
                 dontDrawOut = true;
             }
 
@@ -1711,7 +2034,7 @@ public:
         int indexNum = firstPolygonNum;
 
         for (int i = 0; i < 36; i += 3) {
-            if (pseudoPos[links[i]].myPos.z > 9 && pseudoPos[links[i+1]].myPos.z > 9 && pseudoPos[links[i+2]].myPos.z > 9) {
+            if (pseudoPos[links[i]].myPos.z > 5 && pseudoPos[links[i+1]].myPos.z > 5 && pseudoPos[links[i+2]].myPos.z > 5) {
                 indexNum += 1;
                 continue;
             }
@@ -1886,7 +2209,7 @@ struct basicInfo {
 
 
 struct pressedKeys {
-    bool forward, left, right, backward, up, down, cameraUp, cameraDown, cameraLeft, cameraRight;
+    bool forward, left, right, backward, up, down, cameraUp, cameraDown, cameraLeft, cameraRight, buttonA, buttonB, buttonMenu;
 
     pressedKeys() {
         this->forward = false;
@@ -1899,6 +2222,9 @@ struct pressedKeys {
         this->cameraDown = false;
         this->cameraLeft = false;
         this->cameraRight = false;
+        this->buttonA = false;
+        this->buttonB = false;
+        this->buttonMenu = false;
     }
 };
 
@@ -1980,6 +2306,27 @@ public:
             Cube3D_float* oneObject = globalInfo.objectList[i];
             if (oneObject->visibility) {
                 oneObject->drawOutFastSDL2(myBasicInfo, sdlBuffer, zBuffer, globalInfo.polygonList);
+            }
+            if (oneObject->colision) {
+                if (oneObject->colide(nextPositionX, sizeBox, sizeRadius)) {
+                    colidingX = true;
+                }
+                if (oneObject->colide(nextPositionY, sizeBox, sizeRadius)) {
+                    colidingY = true;
+                }
+                if (oneObject->colide(nextPositionZ, sizeBox, sizeRadius)) {
+                    colidingZ = true;
+                }
+            }
+        }
+    }
+
+    void cameraScreenSmall(uint8_t* smallScreenBuf, uint8_t* zBuffer, basicInfo &globalInfo) {
+        linearColisionSetup();
+        for (int i = 0; i < globalInfo.objectList.size(); i += 1) {
+            Cube3D_float* oneObject = globalInfo.objectList[i];
+            if (oneObject->visibility) {
+                oneObject->drawOutFastSDL2(myBasicInfo, smallScreenBuf, zBuffer, globalInfo.polygonList);
             }
             if (oneObject->colision) {
                 if (oneObject->colide(nextPositionX, sizeBox, sizeRadius)) {
@@ -2154,28 +2501,6 @@ public:
 };
 
 
-void setIO(std::vector<gpio_num_t> outputIO, std::vector<gpio_num_t> inputy) {
-    gpio_config_t output_conf = {};
-    output_conf.intr_type = GPIO_INTR_DISABLE;
-    output_conf.mode = GPIO_MODE_OUTPUT;
-    for (auto outoo : outputIO) {
-        output_conf.pin_bit_mask |= 1ULL << outoo;
-    }
-    output_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    output_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&output_conf);
-    gpio_config_t inputs_conf = {};
-    inputs_conf.intr_type = GPIO_INTR_DISABLE;
-    inputs_conf.mode = GPIO_MODE_INPUT;
-    for (auto intup : inputy) {
-        output_conf.pin_bit_mask |= 1ULL << intup;
-    }
-    inputs_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    inputs_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&inputs_conf);
-}
-
-
 struct VGATimings {
     int screenWidth, screenHeight;
     int HFront, HBack, Hsync;
@@ -2204,17 +2529,25 @@ struct VGATimings {
         }
     }
 
-    void prepareLCDMod() {
+    void prepareLCDMod(bool tim25MHz) {
         periph_module_enable(PERIPH_LCD_CAM_MODULE);
         periph_module_reset(PERIPH_LCD_CAM_MODULE);
         LCD_CAM.lcd_user.lcd_reset = 1;
         LCD_CAM.lcd_user.lcd_reset = 0;
         LCD_CAM.lcd_clock.val = 0;
         LCD_CAM.lcd_clock.clk_en = 1;
-        LCD_CAM.lcd_clock.lcd_clk_sel = 2;      // Zdroj 160 MHz (PLL_D2_CLK)
-        LCD_CAM.lcd_clock.lcd_clkm_div_num = 6;  // Celá část děličky
-        LCD_CAM.lcd_clock.lcd_clkm_div_b = 2;    // Čitatel (0.4 = 2/5)
-        LCD_CAM.lcd_clock.lcd_clkm_div_a = 5;    // Jmenovatel
+        if (tim25MHz) {
+            LCD_CAM.lcd_clock.lcd_clk_sel = 2;      // Zdroj 160 MHz (PLL_D2_CLK)
+            LCD_CAM.lcd_clock.lcd_clkm_div_num = 6;  // Celá část děličky
+            LCD_CAM.lcd_clock.lcd_clkm_div_b = 2;    // Čitatel (0.4 = 2/5)
+            LCD_CAM.lcd_clock.lcd_clkm_div_a = 5;    // Jmenovatel
+        }
+        else {
+            LCD_CAM.lcd_clock.lcd_clk_sel = 2;      // Zdroj 160 MHz (PLL_D2_CLK)
+            LCD_CAM.lcd_clock.lcd_clkm_div_num = 6;  // Celá část děličky
+            LCD_CAM.lcd_clock.lcd_clkm_div_b = 1;    // Čitatel (0.4 = 2/5)
+            LCD_CAM.lcd_clock.lcd_clkm_div_a = 3;    // Jmenovatel
+        }
         LCD_CAM.lcd_clock.lcd_ck_out_edge = 0;
         LCD_CAM.lcd_clock.lcd_ck_idle_edge = 0;
         LCD_CAM.lcd_clock.lcd_clk_equ_sysclk = 0;
@@ -2276,6 +2609,7 @@ struct OledDispley {
     int collums = 128;
     int rows = 64;
     int pages = 8;
+    int updateFreq = 20000;
     uint8_t* myBuffer = (uint8_t*)heap_caps_malloc(1024 * sizeof(uint8_t), MALLOC_CAP_INTERNAL);
 
     void oledCommand(uint8_t cmd) {
@@ -2286,7 +2620,7 @@ struct OledDispley {
     }
 
     void initOLED_BareMetal() {
-        Wire.begin(sdlDataPin, sdlCLKPin, 400000); // Start I2C na 400kHz (rychlý režim)
+        Wire.begin(sdlDataPin, sdlCLKPin, updateFreq); // Start I2C na 400kHz (rychlý režim)
 
         oledCommand(0xAE); // Displej VYPNOUT
         oledCommand(0xD5); oledCommand(0x80); // Nastavení frekvence oscilátoru
@@ -2345,9 +2679,7 @@ struct OledDispley {
         if (y < 0) {
             return;
         }
-        myBuffer[x + (y / pages) * collums] |= (1 << (y%8));
-        oledCommand(0x21); oledCommand(x); oledCommand(127);
-        oledCommand(0x22); oledCommand((y>>3)); oledCommand(7);
+        myBuffer[x + (y / 8) * collums] |= (1 << (y%8));
     }
 
     void sendBuffer() {
@@ -2358,7 +2690,22 @@ struct OledDispley {
             Wire.write(0x40);
 
             for (int col = 0; col < collums; col++) {
-                Wire.write(myBuffer[col + (page / pages) * collums]);
+                Wire.write(myBuffer[col + page * collums]);
+            }
+
+            Wire.endTransmission();
+        }
+    }
+
+    void sendCustomBuffer(uint8_t* buffer, int x = 0, int y = 0, int width = 64, int height = 4) {
+        oledCommand(0x21); oledCommand(x); oledCommand(127);
+        oledCommand(0x22); oledCommand(y); oledCommand(7);
+        for (int page = 0; page < height; page++) {
+            Wire.beginTransmission(oledADDR);
+            Wire.write(0x40);
+
+            for (int col = 0; col < width; col++) {
+                Wire.write(buffer[col + page * collums]);
             }
 
             Wire.endTransmission();
@@ -2371,12 +2718,39 @@ struct OledDispley {
 };
 
 
+struct quickPlayerInfo {
+    int fov = 90;
+    float senstivity = 0.0005;
+    float speed = 0.05;
+    float gravity = 0;
+    bool gravityMode = false;
+    simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0);
+    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4);
+
+    quickPlayerInfo(int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
+    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
+        this->fov = fov;
+        this->senstivity = senstivity;
+        this->speed = speed;
+        this->gravity = gravity;
+        this->gravityMode = gravityMode;
+        this->beginPos = beginPos;
+        this->colisionBox = colisionBox;
+    }
+};
+
+
+Player_float createBasicPlayer(int height, int width, bool blockify, float lodLevel, quickPlayerInfo info = quickPlayerInfo()) {
+    return Player_float(info.speed, height, width, info.fov, info.beginPos, blockify, lodLevel, info.colisionBox, info.gravity, info.gravityMode, info.senstivity);
+}
+
+
 class gameInfo {
 private:
     uint8_t* zBuffer;
     uint8_t* frontBuffer;
     uint8_t* backBuffer;
-    uint8_t* linesBuffer[6];
+    uint8_t* linesBuffer[8];
     VGATimings myVGA;
     pressedKeys myKeys;
     gdma_channel_handle_t dma_chan;
@@ -2388,18 +2762,18 @@ private:
     bool doubled;
 
     void prepareBlankLines() {
-        for (int i = 0; i < 4; i += 1) {
+        for (int i = 0; i < 6; i += 1) {
             memset(linesBuffer[i], fillerZero, myVGA.totalWidths);
             memset(linesBuffer[i], fillerHsync, myVGA.Hsync);
             Cache_WriteBack_Addr((uint32_t)linesBuffer[i], myVGA.totalWidths);
         }
-        memset(linesBuffer[4], vSyncfillerZero, myVGA.totalWidths);
-        memset(linesBuffer[4], vSyncfillerHsync, myVGA.Hsync);
+        memset(linesBuffer[6], vSyncfillerZero, myVGA.totalWidths);
+        memset(linesBuffer[6], vSyncfillerHsync, myVGA.Hsync);
 
-        memset(linesBuffer[5], fillerZero, myVGA.totalWidths);
-        memset(linesBuffer[5], fillerHsync, myVGA.Hsync);
-        Cache_WriteBack_Addr((uint32_t)linesBuffer[4], myVGA.totalWidths);
-        Cache_WriteBack_Addr((uint32_t)linesBuffer[5], myVGA.totalWidths);
+        memset(linesBuffer[7], fillerZero, myVGA.totalWidths);
+        memset(linesBuffer[7], fillerHsync, myVGA.Hsync);
+        Cache_WriteBack_Addr((uint32_t)linesBuffer[6], myVGA.totalWidths);
+        Cache_WriteBack_Addr((uint32_t)linesBuffer[7], myVGA.totalWidths);
     }
 
     void setupGDMA_Chan() {
@@ -2425,11 +2799,6 @@ private:
         gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
     }
 
-    Player_float createBasicPlayer(int fov = 90, float senstivity = 0.0005, float speed = 0.05, float gravity = 0, bool gravityMode = false, simple3D_Pos_float beginPos = simple3D_Pos_float(0,0,0),
-    simple3D_Pos_float colisionBox = simple3D_Pos_float(4,4,4)) {
-        return Player_float(speed, height, width, fov, beginPos, blockify, lodLevel, colisionBox, gravity, gravityMode, senstivity);
-    }
-
 public:
 
     uint8_t renderDistance;
@@ -2440,20 +2809,22 @@ public:
     float lodLevel;
     SemaphoreHandle_t mySemaphore;
     volatile int virLineCount = 0;
-    int activeBuffer = 0;
     int activeDesc = 0;
     int activeStart;
     int activeEnd;
-    int novaCara = 0;
     bool doubeling = false;
+    bool turnScreen = true;
     pressedKeys currentKeys;
     lldesc_t* dmaDesc;
     Player_float myPlayer;
     gameMode mode;
     OledDispley myDisplay;
 
-    gameInfo(int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18}, gameMode currentMode = gameMode::game3d,
-        uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = false, float lodLevel = 0.5) {
+    gameInfo(const gameInfo&) = delete;
+    gameInfo& operator=(const gameInfo&) = delete;
+
+    gameInfo(quickPlayerInfo info = quickPlayerInfo(), int windowWidth = 320, int windowHeight = 240, std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18}, gameMode currentMode = gameMode::game3d,
+        uint8_t renderDistance = 255, SimpleColor backgroundColor = SimpleColor(0,0,255), bool blockify = true, float lodLevel = 0.5) {
         this->width = windowWidth;
         this->height = windowHeight;
         this->myVGA = VGATimings();
@@ -2464,6 +2835,13 @@ public:
         this->currentKeys = pressedKeys();
         this->mySemaphore = xSemaphoreCreateBinary();
         this->mode = currentMode;
+        this->renderDistance = renderDistance;
+        this->lodLevel = lodLevel;
+        this->blockify = blockify;
+        this->activeStart = myVGA.VBack + myVGA.Vsync;
+        this->activeEnd = activeStart + myVGA.screenHeight;
+        this->myPlayer = createBasicPlayer(height, width, blockify, lodLevel, info);
+        this->doubled = false;
 
         if (mySemaphore == NULL) {
             std::cout << "!!!!! Semaphore hasn`t been inicialized !!!!!!!" << std::endl;
@@ -2474,11 +2852,16 @@ public:
         this->backBuffer = (uint8_t *)heap_caps_malloc(windowWidth * windowHeight * sizeof(uint8_t), MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
         this->zBuffer = (uint8_t*)heap_caps_malloc(windowHeight * windowWidth * sizeof(uint8_t), MALLOC_CAP_INTERNAL);
         this->backgroundColor = backgroundColor.convertToBinary();
-        for (int i = 0; i < 6; i += 1) {
+        for (int i = 0; i < 8; i += 1) {
             this->linesBuffer[i] = (uint8_t *)heap_caps_malloc(myVGA.totalWidths, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+            if (linesBuffer[i] == NULL) {
+                std::cout << "!!!!! Buffers haven't been inicialized !!!!!!!" << std::endl;
+                Serial.printf("!!!!! Buffers haven't been inicialized !!!!!!!");
+                return;
+            }
         }
 
-        if (frontBuffer == NULL || zBuffer == NULL || linesBuffer[1] == NULL || linesBuffer[0] == NULL || linesBuffer[2] == NULL || linesBuffer[3] == NULL) {
+        if (frontBuffer == NULL || backBuffer == NULL || zBuffer == NULL) {
             std::cout << "!!!!! Buffers haven't been inicialized !!!!!!!" << std::endl;
             Serial.printf("!!!!! Buffers haven't been inicialized !!!!!!!");
             return;
@@ -2489,9 +2872,9 @@ public:
         memset(zBuffer, renderDistance, height * width);
         prepareBlankLines();
 
-        dmaDesc = (lldesc_t*)heap_caps_malloc(4 * sizeof(lldesc_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+        dmaDesc = (lldesc_t*)heap_caps_malloc(6 * sizeof(lldesc_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
-        for (int i = 0; i < 4; i += 1) {
+        for (int i = 0; i < 6; i += 1) {
             dmaDesc[i].size = myVGA.totalWidths;
             dmaDesc[i].length = myVGA.totalWidths;
             dmaDesc[i].owner = 1;
@@ -2500,20 +2883,12 @@ public:
             dmaDesc[i].eof = 1;
             dmaDesc[i].buf = linesBuffer[i];
             dmaDesc[i].qe.stqe_next = &dmaDesc[(i + 1)];
-            if (i == 3) {
+            if (i == 5) {
                 dmaDesc[i].qe.stqe_next = &dmaDesc[0];
             }
         }
 
-        Cache_WriteBack_Addr((uint32_t)dmaDesc, 4 * sizeof(lldesc_t));
-
-        this->renderDistance = renderDistance;
-        this->lodLevel = lodLevel;
-        this->blockify = blockify;
-        this->activeStart = myVGA.VBack + myVGA.Vsync;
-        this->activeEnd = activeStart + myVGA.screenHeight;
-        this->myPlayer = createBasicPlayer();
-        this->doubled = false;
+        Cache_WriteBack_Addr((uint32_t)dmaDesc, 6 * sizeof(lldesc_t));
     }
 
 
@@ -2542,25 +2917,27 @@ public:
         }
 
         if (virLineCount < myVGA.Vsync) {
-            dmaDesc[activeDesc].buf = linesBuffer[4];
+            dmaDesc[activeDesc].buf = linesBuffer[6];
         }
 
         else if (virLineCount < activeEnd && virLineCount >= activeStart) {
             uint8_t* bufferFill = linesBuffer[activeDesc];
             int yPos = (virLineCount - activeStart) >> 1;
-            expandLines(bufferFill, yPos);
-            dmaDesc[activeDesc].buf = linesBuffer[activeDesc];
-            Cache_WriteBack_Addr((uint32_t)bufferFill, myVGA.totalWidths);
+            if (turnScreen) {
+                expandLines(bufferFill, yPos);
+                dmaDesc[activeDesc].buf = linesBuffer[activeDesc];
+                Cache_WriteBack_Addr((uint32_t)bufferFill, myVGA.totalWidths);
+            }
         }
 
         else {
-            dmaDesc[activeDesc].buf = linesBuffer[5];
+            dmaDesc[activeDesc].buf = linesBuffer[7];
         }
         activeDesc += 1;
-        if (activeDesc > 3) {
+        if (activeDesc > 5) {
             activeDesc = 0;
         }
-        Cache_WriteBack_Addr((uint32_t)dmaDesc, 4 *sizeof(lldesc_t));
+        Cache_WriteBack_Addr((uint32_t)dmaDesc,6 * sizeof(lldesc_t));
     }
 
     static IRAM_ATTR bool interuptGDMA_callback(gdma_channel_handle_t dma_chanHandlerer, gdma_event_data_t *eventData, void *userData) {
@@ -2572,7 +2949,7 @@ public:
     void vgaSetup() {
         setCpuFrequencyMhz(240);
         vTaskPrioritySet(NULL, configMAX_PRIORITIES - 1);
-        myVGA.prepareLCDMod();
+        myVGA.prepareLCDMod(true);
         myVGA.setupPins(pins);
         setupGDMA_Chan();
         LCD_CAM.lc_dma_int_ena.lcd_trans_done_int_ena = 0;
@@ -2616,24 +2993,22 @@ public:
         if (y <= 0) {
             y = 0;
         }
-        backBuffer[y * width + x] = color;
+        if (!smallDisplay) {
+            backBuffer[y * width + x] = color;
+        }
         if (smallDisplay) {
             myDisplay.colorPixel(x, y);
         }
     }
 
-
-    void drawSymbolsB(const char* const* inputa, int x = 0, int y = 0, uint8_t color = 0b11111111, bool smallDisplay = false) {
-        // row = one string, multiple rows = list of strings
-        // start = top corner
-        // # = draw, anything else = no draw
+    void drawSymbolsB(const uint8_t* inputa, int x = 0, int y = 0, uint8_t color = 0b11111111, bool smallDisplay = false) {
         int curX = x;
         int curY = y;
         for (int i = 0; i < basicAsciAlpbt::alphabetSizeStandarsY; i += 1) {
-            const char* oneString = inputa[i];
+            uint8_t oneInt = inputa[i];
             curX = x;
             for (int j = 0; j < basicAsciAlpbt::alphabetSizeStandars; j += 1) {
-                if (oneString[j] == '#') {
+                if ((oneInt >> j) & 1) {
                     drawPixelB(curX, curY, color, smallDisplay);
                 }
                 curX += 1;
@@ -2642,13 +3017,30 @@ public:
         }
     }
 
+    void drawPicture(picture picture, int x = 0, int y = 0) {
+        int curX = x;
+        int curY = y;
+        const uint8_t* bitmap = basicAsciAlpbt::getSymbol(picture);
+        for (int i = 0; i < basicAsciAlpbt::bitmapHeight; i += 1) {
+            uint8_t oneInt = bitmap[i];
+            curX = x;
+            for (int j = 0; j < basicAsciAlpbt::bitmapWidth; j += 1) {
+                if ((oneInt << j) & 1) {
+                    drawPixelB(curX, curY, 0b11000000, true);
+                }
+                curX += 1;
+            }
+            curY += 1;
+        }
+    }
 
     void writeOutTextB(const char* text, int posX = 0, int posY = 0, bool smallScreen = false, int charDistance = basicAsciAlpbt::alphabetSizeStandars + 2,
         int charDistanceY = basicAsciAlpbt::alphabetSizeStandarsY + 2, uint8_t color = 0b11111111) {
         int curX = posX;
         int curY = posY;
-        myDisplay.clearBuffer(0);
-        Serial.printf("ZAacate");
+        if (smallScreen) {
+            myDisplay.clearBuffer(0);
+        }
         while (text[0]) {
             if (text[0] == '`') {
                 curY += charDistanceY;
@@ -2657,36 +3049,32 @@ public:
                 continue;
             }
 
-            const char* const* oneInput = basicAsciAlpbt::getChar(text[0]);
+            const uint8_t* oneInput = basicAsciAlpbt::getChar(text[0]);
             drawSymbolsB(oneInput, curX, curY, color, smallScreen);
             curX += charDistance;
             text += 1;
         }
         if (smallScreen) {
-            Serial.printf("Konec");
             myDisplay.sendBuffer();
         }
     }
-
 
     void clearScreenB() {
         memset(backBuffer, backgroundColor, height * width);
     }
 
-
     void turnOnScreenB() {
-        gdma_tx_event_callbacks_t myCallbacks = {
-            .on_trans_eof = interuptGDMA_callback
-        };
-        gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, this);
+        if (!turnScreen) {
+            turnScreen = true;
+            Serial.printf("Screen turned on \n");
+        }
     }
 
-
     void turnOffScreenB() {
-        gdma_tx_event_callbacks_t myCallbacks = {
-            .on_trans_eof = NULL
-        };
-        gdma_register_tx_event_callbacks(dma_chan, &myCallbacks, NULL);
+        if (turnScreen) {
+            turnScreen = false;
+            Serial.printf("Screen turned off \n");
+        }
     }
 
     ~gameInfo() {
@@ -2697,11 +3085,158 @@ public:
 };
 
 
+struct fullMenu {
+    std::array<int, 11> buttonPins;
+    std::array<int, 4> buttonAdvancePins;
+    gameInfo info;
+    int currentMenuItem = 0;
+    int maxMenuItem = 7;
+    const char* desiredText = "Brtaba OS`by Brtaba`Press A to start";
+
+    void setupButtons(bool pullDown = true) {
+        for (int i = 0; i < 11; i += 1) {
+            if (pullDown) pinMode(buttonPins[i], INPUT_PULLDOWN);
+            else if (!pullDown) pinMode(buttonPins[i], INPUT_PULLUP);
+        }
+    }
+
+    fullMenu(quickPlayerInfo playerInfo = quickPlayerInfo(), int windowWidth = 320, int windowHeight = 240,
+        std::array<int, 8> pins = {4, 5, 6, 7, 38, 39, 17, 18}, gameMode currentMode = gameMode::game3d,
+        std::array<int, 11> buttonPins = {12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12})
+        : buttonPins(buttonPins), info(playerInfo, windowWidth, windowHeight, pins, currentMode) {
+        scrollMenuIfElse();
+    }
+
+    void scroolMenu() {
+        if (info.currentKeys.right) {
+            currentMenuItem += 1;
+            if (currentMenuItem > maxMenuItem) {
+                currentMenuItem = 0;
+            }
+            info.currentKeys.right = false;
+            scrollMenuIfElse();
+        }
+
+        if (info.currentKeys.cameraUp) {
+            currentMenuItem -= 1;
+            if (currentMenuItem < 0) {
+                currentMenuItem = maxMenuItem;
+            }
+            info.currentKeys.cameraUp = false;
+            scrollMenuIfElse();
+        }
+    }
+
+    void scrollMenuIfElse() {
+        if (currentMenuItem == 1) {
+            info.drawPicture(picture::setting, 32, 0);
+        }
+
+        else if (currentMenuItem == 2) {
+            info.drawPicture(picture::game3d, 32, 0);
+        }
+
+        else if (currentMenuItem == 3) {
+            info.drawPicture(picture::text, 32, 0);
+        }
+
+        else if (currentMenuItem == 4) {
+            info.drawPicture(picture::audio, 32, 0);
+        }
+
+        else if (currentMenuItem == 5) {
+            info.drawPicture(picture::IR_control, 32, 0);
+        }
+
+        else if (currentMenuItem == 6) {
+            info.drawPicture(picture::motor, 32, 0);
+        }
+
+        else if (currentMenuItem == 7) {
+            info.drawPicture(picture::led, 32, 0);
+        }
+    }
+
+    void readButton() {
+        if (digitalRead(buttonPins[0]) == HIGH) {
+            info.currentKeys.cameraRight = true;
+        }
+        if (digitalRead(buttonPins[0]) == LOW) {
+            info.currentKeys.cameraRight = false;
+        }
+        if (digitalRead(buttonPins[1]) == HIGH) {
+            info.currentKeys.cameraUp = true;
+        }
+        if (digitalRead(buttonPins[1]) == LOW) {
+            info.currentKeys.cameraUp = false;
+        }
+        if (digitalRead(buttonPins[2]) == HIGH) {
+            info.currentKeys.cameraLeft = true;
+        }
+        if (digitalRead(buttonPins[2]) == LOW) {
+            info.currentKeys.cameraLeft = false;
+        }
+        if (digitalRead(buttonPins[3]) == HIGH) {
+            info.currentKeys.cameraDown = true;
+        }
+        if (digitalRead(buttonPins[3]) == LOW) {
+            info.currentKeys.cameraDown = false;
+        }
+        if (digitalRead(buttonPins[4]) == HIGH) {
+            info.currentKeys.forward = true;
+        }
+        if (digitalRead(buttonPins[4]) == LOW) {
+            info.currentKeys.forward = false;
+        }
+        if (digitalRead(buttonPins[5]) == HIGH) {
+            info.currentKeys.backward = true;
+        }
+        if (digitalRead(buttonPins[5]) == LOW) {
+            info.currentKeys.backward = false;
+        }
+        if (digitalRead(buttonPins[6]) == HIGH) {
+            info.currentKeys.left = true;
+        }
+        if (digitalRead(buttonPins[6]) == LOW) {
+            info.currentKeys.left = false;
+        }
+        if (digitalRead(buttonPins[7]) == HIGH) {
+            info.currentKeys.right = true;
+        }
+        if (digitalRead(buttonPins[7]) == LOW) {
+            info.currentKeys.right = false;
+        }
+        if (digitalRead(buttonPins[8]) == HIGH) {
+            info.currentKeys.buttonA = true;
+        }
+        if (digitalRead(buttonPins[8]) == LOW) {
+            info.currentKeys.buttonA = false;
+        }
+        if (digitalRead(buttonPins[9]) == HIGH) {
+            info.currentKeys.buttonB = true;
+        }
+        if (digitalRead(buttonPins[9]) == LOW) {
+            info.currentKeys.buttonB = false;
+        }
+        if (digitalRead(buttonPins[10]) == HIGH) {
+            info.currentKeys.buttonMenu = true;
+        }
+        if (digitalRead(buttonPins[10]) == LOW) {
+            info.currentKeys.buttonMenu = false;
+        }
+    }
+
+    void readButtonCLK() {
+
+    }
+};
+
+
 static void core0Task(void* parameters) {
+    vTaskDelay(1700);
+    fullMenu* instance = (fullMenu*)parameters;
     vTaskDelay(50);
-    gameInfo* instance = (gameInfo*)parameters;
-    vTaskDelay(50);
-    instance->vgaSetup();
+    instance->info.vgaSetup();
     while (true) {
         vTaskDelay(10);
     }
@@ -2709,52 +3244,53 @@ static void core0Task(void* parameters) {
 
 
 static void core1Task(void* parameters) {
-    vTaskDelay(500);
-    gameInfo* instance = (gameInfo*)parameters;
+    vTaskDelay(1500);
+    fullMenu* bigInstance = (fullMenu*)parameters;
+    gameInfo& instance = bigInstance->info;
     gpio_reset_pin(GPIO_NUM_40);
     gpio_reset_pin(GPIO_NUM_36);
     pinMode(41, INPUT_PULLDOWN);
     pinMode(36, INPUT_PULLDOWN);
     pinMode(35, INPUT_PULLDOWN);
     pinMode(37, INPUT_PULLDOWN);
-    instance->myDisplay.initOLED_BareMetal();
-    instance->writeOutTextB("Ahoj svete", 10, 10, true);
-    instance->writeOutTextB("Ahoj sveete", 10, 10, true);
+    instance.myDisplay.initOLED_BareMetal();
+    instance.writeOutTextB("Ahoj lidi", 10, 10, true);
     vTaskDelay(500);
     while (true) {
-        if (instance->mode == gameMode::game3d) {
-            instance->drawScene();
+        if (instance.mode == gameMode::game3d) {
+            instance.drawScene();
         }
-        if (instance->mode == gameMode::text) {
-            instance->clearScreenB();
-            instance->writeOutTextB("Brtaba OS", 150, 100);
+        if (instance.mode == gameMode::text) {
+            instance.clearScreenB();
+            instance.writeOutTextB("Brtaba OS", 150, 100);
         }
         if (digitalRead(41) == HIGH) {
-            instance->currentKeys.cameraRight = true;
+            instance.turnOffScreenB();
         }
         if (digitalRead(41) == LOW) {
-            instance->currentKeys.cameraRight = false;
+            instance.currentKeys.cameraRight = false;
         }
         if (digitalRead(36) == HIGH) {
-            instance->currentKeys.forward = true;
+            instance.currentKeys.forward = true;
         }
         if (digitalRead(36) == LOW) {
-            instance->currentKeys.forward = false;
+            instance.currentKeys.forward = false;
         }
         if (digitalRead(35) == HIGH) {
-            instance->currentKeys.cameraDown = true;
+            instance.currentKeys.cameraDown = true;
         }
         if (digitalRead(35) == LOW) {
-            instance->currentKeys.cameraDown = false;
+            instance.currentKeys.cameraDown = false;
         }
         if (digitalRead(37) == HIGH) {
-            instance->currentKeys.cameraUp = true;
+            instance.turnOnScreenB();
         }
         if (digitalRead(37) == LOW) {
-            instance->currentKeys.cameraUp = false;
+            instance.currentKeys.cameraUp = false;
         }
-        xSemaphoreTake(instance->mySemaphore, portMAX_DELAY);
-        instance->swapBuffers();
+        while (xSemaphoreTake(instance.mySemaphore, 0) == pdTRUE) {}
+        xSemaphoreTake(instance.mySemaphore, portMAX_DELAY);
+        instance.swapBuffers();
         vTaskDelay(1);
     }
 }
@@ -2811,38 +3347,42 @@ simple3D_Pos_float playerGetPos(Player_float &player) {
     return player.myPos.myPos;
 }
 
+fullMenu* menu = nullptr;
 
-gameInfo* game = nullptr;
-Player_float* myPlayer = nullptr;
+
+void print_mem() {
+    printf("Free Full: %u\n", ESP.getHeapSize());
+    printf("Largest Heap: %u\n", ESP.getFreeHeap());
+    printf("Free minimum: %u\n",  ESP.getMinFreeHeap());
+}
+
 
 
 void setup() {
     Serial.begin(115200);
     delay(200);
-    Serial.printf("Starting ...");
-    Serial.printf("Total heap: %u bytes\n", ESP.getHeapSize());
-    Serial.printf("Free heap: %u bytes\n", ESP.getFreeHeap());
-    Serial.printf("Minimum free heap ever: %u bytes\n", ESP.getMinFreeHeap());
+    print_mem();
 
-    game = new gameInfo(320, 240, {4,5,6,7,38,39,17,18}, gameMode::game3d);
-    for (int i = 0; i < 4; i += 1) {
-        createBasicCube(*game, game->myPlayer, simple3D_Pos_float(getRandomfloat(-10,10),getRandomfloat(-10,10),getRandomfloat(-10,10)),
+    menu = new fullMenu(quickPlayerInfo(), 320, 240, {4, 5, 6, 7, 38, 39, 17, 18}, gameMode::game3d);
+
+    for (int i = 0; i < 10; i += 1) {
+        createBasicCube(menu->info, menu->info.myPlayer, simple3D_Pos_float(getRandomfloat(-10,10),getRandomfloat(-10,10),getRandomfloat(-10,10)),
             simple3D_Pos_float(getRandomfloat(1,5),getRandomfloat(1,5),getRandomfloat(1,5)),
             SimpleColor(getRandomInt(0,255),getRandomInt(0,255),getRandomInt(0,255)),
             SimpleColor(0,0,0), true);
     }
-    createBasicCube(*game, game->myPlayer, simple3D_Pos_float(-1,-3,-3),simple3D_Pos_float(11,12,1), SimpleColor(0,100,0));
-    Serial.printf("Free heap after blocks: %u bytes\n", ESP.getFreeHeap());
+    createBasicCube(menu->info, menu->info.myPlayer, simple3D_Pos_float(-1,-3,-3),simple3D_Pos_float(11,12,1), SimpleColor(0,100,0));
 
     xTaskCreatePinnedToCore(
         core0Task,
-        "vgaIntrupter", 4096*2, game, 24, nullptr, 0
+        "vgaIntrupter", 4096*2, menu, 24, nullptr, 0
     );
 
     xTaskCreatePinnedToCore(
         core1Task,
-        "renderer", 4096*4, game, 19, nullptr, 1
+        "renderer", 4096*4, menu, 19, nullptr, 1
     );
+    print_mem();
 }
 
 
